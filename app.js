@@ -5,11 +5,12 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
 var admin = require('firebase-admin')
-var serviceAccount = require('./app/config/firebase-auth.json')
-
+// var serviceAccount = require('./app/config/firebase-auth.json')
+serviceAccount = require('./app/config/Config').firebaseAuthenticationProvider()
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 })
+
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -17,7 +18,6 @@ var apiRoot = require('./app/api/routers/Root')
 var app = express();
 
 
-config = require('./app/config/Config')
 
 
 // view engine setup
