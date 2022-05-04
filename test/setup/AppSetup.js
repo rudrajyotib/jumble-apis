@@ -15,7 +15,14 @@ const firestore = {
     }
 }
 
+const authenticator = {
+    createUser: async function (user) {
+        console.log('called setup for real')
+        throw new Error('should always be mocked')
+    }
+}
 
 exports.firestore = firestore
 exports.firestoreCollection = firestoreCollection
 exports.firestoreDocument = firestoreDocument
+exports.auth = authenticator

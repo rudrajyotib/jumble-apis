@@ -5,14 +5,14 @@ const { assert } = require('chai')
 
 
 
-describe("should execute all challenge repository tests", function () {
+describe("should execute all user repository tests", function () {
 
     let documentDataMock
+    let userRepo
     let firestoreCollectionSpy
-    let challengeRepo
 
     before(function () {
-        challengeRepo = require('../../../app/repositories/ChallengeRepository')
+        userRepo = require('../../../app/repositories/UserRepository')
     })
 
     beforeEach(function () {
@@ -27,9 +27,14 @@ describe("should execute all challenge repository tests", function () {
 
     it('should set data', async function () {
         let expectation = documentDataMock.expects('set').once().resolves()
-        await challengeRepo.addChallenge({ place: 'hell' })
+        await userRepo.addUser({ place: 'hell', name: 'someName', email: 'someEmail' })
         expectation.verify()
-        sinon.assert.calledWith(expectation.getCall(0), sinon.match.has('place'))
+        sinon.assert.calledWith(expectation.getCall(0), sinon.match((user) => {
+            assert.notExists(user.place)
+            assert.equal('someName', user.name)
+            assert.equal('someEmail', user.email)
+            return true
+        }))
         assert(firestoreCollectionSpy.calledOnce)
     })
 
@@ -37,11 +42,11 @@ describe("should execute all challenge repository tests", function () {
         let expectation = documentDataMock.expects('set').once().rejects(new Error('could not add challenge'))
         let err
         try {
-            await challengeRepo.addChallenge()
+            await userRepo.addUser({ place: 'hell' })
         } catch (error) {
             err = error
         }
-        assert.equal('challenge not created', err.message)
+        assert.equal('User could not be added to repository', err.message)
         expectation.verify()
     })
 

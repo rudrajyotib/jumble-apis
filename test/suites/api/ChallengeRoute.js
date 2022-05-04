@@ -4,7 +4,6 @@ const assert = require('chai').assert
 
 
 describe("should do service operations", function () {
-    let server
     let challengeService
     let challengeServiceMock
 
@@ -12,13 +11,7 @@ describe("should do service operations", function () {
 
     before(function () {
         challengeService = require('../../../app/service/ChallengeService')
-        server = require('./Server')
     })
-
-    after(function () {
-        server.close()
-    })
-
 
     beforeEach(function () {
         challengeServiceMock = sinon.mock(challengeService)
@@ -38,7 +31,6 @@ describe("should do service operations", function () {
         expectation.verify()
         sinon.assert.calledWith(expectation, sinon.match(function (actual) {
             assert.equal(actual.challenger, 'a7038')
-            // console.log('in matcher actual is ' + JSON.stringify(actual))
             return true
         }, "does not match"))
         assert.equal(response.status, 200)
