@@ -2,6 +2,10 @@ const firestoreDocument = {
     set: async function (data) {
         console.log('called setup for real')
         throw new Error('should always be mocked')
+    },
+    get: async function (data) {
+        console.log('called setup for real')
+        throw new Error('should always be mocked')
     }
 }
 const firestoreCollection = {

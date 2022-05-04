@@ -1,3 +1,4 @@
+const { use } = require('chai')
 const sourceRepo = require('../infra/DataSource')
 
 const repository = sourceRepo.repository
@@ -22,6 +23,31 @@ var userRepository = {
             return userData.userId
         }
         throw new Error("User could not be added to repository")
+    },
+
+    getUser: async function (userId) {
+        try {
+            const user = await repository
+                .collection("users")
+                .doc(userId)
+                .get()
+                .catch((err) => {
+                    return { exists: false }
+                })
+            if (!user.exists) {
+                return { found: false }
+            } else {
+                userData = user.data()
+                return {
+                    found: true,
+                    id: userId,
+                    name: userData.name,
+                    email: userData.email
+                }
+            }
+        } catch (err) {
+            return { found: false }
+        }
     }
 
 }
