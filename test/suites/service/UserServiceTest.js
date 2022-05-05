@@ -133,11 +133,11 @@ describe("should operate user operations", function () {
         let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
         let userRepoGetUserExpectation = userRepositoryMock.expects('getUser')
         let userRepoAddFriendExpectation = userRepositoryMock.expects('addFriend')
-        userRepoFriendCheckExpectation.once().resolves(false)
+        userRepoFriendCheckExpectation.twice().resolves(false)
         userRepoGetUserExpectation.twice()
         userRepoGetUserExpectation.onCall(0).resolves({ found: true, name: 'sourceUserName' })
         userRepoGetUserExpectation.onCall(1).resolves({ found: true, name: 'targetUserName' })
-        userRepoAddFriendExpectation.once().resolves()
+        userRepoAddFriendExpectation.twice().resolves()
         const result = await userService.addFriend({
             sourceUserId: 'someSourceId',
             targetUserId: 'someTargetId'
@@ -145,6 +145,20 @@ describe("should operate user operations", function () {
         userRepoFriendCheckExpectation.verify()
         userRepoGetUserExpectation.verify()
         userRepoAddFriendExpectation.verify()
+        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(0), sinon.match((friendCheckInput) => {
+            assert.equal(friendCheckInput.sourceUserId, 'someSourceId')
+            assert.equal(friendCheckInput.targetUserId, 'someTargetId')
+            assert.notExists(friendCheckInput.targetFriendName)
+            assert.notExists(friendCheckInput.status)
+            return true
+        }))
+        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(1), sinon.match((friendCheckInput) => {
+            assert.equal(friendCheckInput.targetUserId, 'someSourceId')
+            assert.equal(friendCheckInput.sourceUserId, 'someTargetId')
+            assert.notExists(friendCheckInput.targetFriendName)
+            assert.notExists(friendCheckInput.status)
+            return true
+        }))
         sinon.assert.calledWith(userRepoGetUserExpectation.getCall(0), sinon.match('someSourceId'))
         sinon.assert.calledWith(userRepoGetUserExpectation.getCall(1), sinon.match('someTargetId'))
         sinon.assert.calledWith(userRepoAddFriendExpectation.getCall(0), sinon.match((friendRequest) => {
@@ -154,14 +168,67 @@ describe("should operate user operations", function () {
             assert.equal(friendRequest.status, 'awaiting')
             return true
         }))
-        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(0), sinon.match((friendRequest) => {
-            assert.equal(friendRequest.sourceUserId, 'someSourceId')
-            assert.equal(friendRequest.targetUserId, 'someTargetId')
-            assert.notExists(friendRequest.targetFriendName)
-            assert.notExists(friendRequest.status)
+        sinon.assert.calledWith(userRepoAddFriendExpectation.getCall(1), sinon.match((friendRequest) => {
+            assert.equal(friendRequest.targetUserId, 'someSourceId')
+            assert.equal(friendRequest.sourceUserId, 'someTargetId')
+            assert.equal(friendRequest.targetFriendName, 'sourceUserName')
+            assert.equal(friendRequest.status, 'awaiting')
             return true
         }))
+
         assert.equal(result.result, 1)
+    })
+
+    it("should not add users if reverse friend add fails", async function () {
+        let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
+        let userRepoGetUserExpectation = userRepositoryMock.expects('getUser')
+        let userRepoAddFriendExpectation = userRepositoryMock.expects('addFriend')
+        userRepoFriendCheckExpectation.twice().resolves(false)
+        userRepoGetUserExpectation.twice()
+        userRepoGetUserExpectation.onCall(0).resolves({ found: true, name: 'sourceUserName' })
+        userRepoGetUserExpectation.onCall(1).resolves({ found: true, name: 'targetUserName' })
+        userRepoAddFriendExpectation.twice()
+        userRepoAddFriendExpectation.onCall(0).resolves()
+        userRepoAddFriendExpectation.onCall(1).rejects({ error: 'some error' })
+        const result = await userService.addFriend({
+            sourceUserId: 'someSourceId',
+            targetUserId: 'someTargetId'
+        })
+        userRepoFriendCheckExpectation.verify()
+        userRepoGetUserExpectation.verify()
+        userRepoAddFriendExpectation.verify()
+        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(0), sinon.match((friendCheckInput) => {
+            assert.equal(friendCheckInput.sourceUserId, 'someSourceId')
+            assert.equal(friendCheckInput.targetUserId, 'someTargetId')
+            assert.notExists(friendCheckInput.targetFriendName)
+            assert.notExists(friendCheckInput.status)
+            return true
+        }))
+        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(1), sinon.match((friendCheckInput) => {
+            assert.equal(friendCheckInput.targetUserId, 'someSourceId')
+            assert.equal(friendCheckInput.sourceUserId, 'someTargetId')
+            assert.notExists(friendCheckInput.targetFriendName)
+            assert.notExists(friendCheckInput.status)
+            return true
+        }))
+        sinon.assert.calledWith(userRepoGetUserExpectation.getCall(0), sinon.match('someSourceId'))
+        sinon.assert.calledWith(userRepoGetUserExpectation.getCall(1), sinon.match('someTargetId'))
+        sinon.assert.calledWith(userRepoAddFriendExpectation.getCall(0), sinon.match((friendRequest) => {
+            assert.equal(friendRequest.sourceUserId, 'someSourceId')
+            assert.equal(friendRequest.targetUserId, 'someTargetId')
+            assert.equal(friendRequest.targetFriendName, 'targetUserName')
+            assert.equal(friendRequest.status, 'awaiting')
+            return true
+        }))
+        sinon.assert.calledWith(userRepoAddFriendExpectation.getCall(1), sinon.match((friendRequest) => {
+            assert.equal(friendRequest.targetUserId, 'someSourceId')
+            assert.equal(friendRequest.sourceUserId, 'someTargetId')
+            assert.equal(friendRequest.targetFriendName, 'sourceUserName')
+            assert.equal(friendRequest.status, 'awaiting')
+            return true
+        }))
+
+        assert.equal(result.result, -1)
     })
 
     it("should not add user if already friends", async function () {
@@ -188,13 +255,14 @@ describe("should operate user operations", function () {
         assert.equal(result.result, 0)
     })
 
-    it("should not add user if source user is not found", async function () {
+    it("should not add user if reverse already friends", async function () {
         let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
         let userRepoGetUserExpectation = userRepositoryMock.expects('getUser')
         let userRepoAddFriendExpectation = userRepositoryMock.expects('addFriend')
-        userRepoFriendCheckExpectation.once().resolves(false)
-        userRepoGetUserExpectation.once()
-        userRepoGetUserExpectation.onCall(0).resolves({ found: false })
+        userRepoFriendCheckExpectation.twice()
+        userRepoFriendCheckExpectation.onCall(0).resolves(false)
+        userRepoFriendCheckExpectation.onCall(1).resolves(true)
+        userRepoGetUserExpectation.never()
         userRepoAddFriendExpectation.never()
         const result = await userService.addFriend({
             sourceUserId: 'someSourceId',
@@ -210,7 +278,13 @@ describe("should operate user operations", function () {
             assert.notExists(friendRequest.status)
             return true
         }))
-        sinon.assert.calledWith(userRepoGetUserExpectation.getCall(0), sinon.match('someSourceId'))
+        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(1), sinon.match((friendRequest) => {
+            assert.equal(friendRequest.targetUserId, 'someSourceId')
+            assert.equal(friendRequest.sourceUserId, 'someTargetId')
+            assert.notExists(friendRequest.targetFriendName)
+            assert.notExists(friendRequest.status)
+            return true
+        }))
         assert.equal(result.result, 0)
     })
 
@@ -218,7 +292,40 @@ describe("should operate user operations", function () {
         let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
         let userRepoGetUserExpectation = userRepositoryMock.expects('getUser')
         let userRepoAddFriendExpectation = userRepositoryMock.expects('addFriend')
-        userRepoFriendCheckExpectation.once().resolves(false)
+        userRepoFriendCheckExpectation.twice().resolves(false)
+        userRepoGetUserExpectation.once()
+        userRepoGetUserExpectation.onCall(0).resolves({ found: false })
+        userRepoAddFriendExpectation.never()
+        const result = await userService.addFriend({
+            sourceUserId: 'someSourceId',
+            targetUserId: 'someTargetId'
+        })
+        userRepoFriendCheckExpectation.verify()
+        userRepoGetUserExpectation.verify()
+        userRepoAddFriendExpectation.verify()
+        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(0), sinon.match((friendCheckInput) => {
+            assert.equal(friendCheckInput.sourceUserId, 'someSourceId')
+            assert.equal(friendCheckInput.targetUserId, 'someTargetId')
+            assert.notExists(friendCheckInput.targetFriendName)
+            assert.notExists(friendCheckInput.status)
+            return true
+        }))
+        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(1), sinon.match((friendCheckInput) => {
+            assert.equal(friendCheckInput.targetUserId, 'someSourceId')
+            assert.equal(friendCheckInput.sourceUserId, 'someTargetId')
+            assert.notExists(friendCheckInput.targetFriendName)
+            assert.notExists(friendCheckInput.status)
+            return true
+        }))
+        sinon.assert.calledWith(userRepoGetUserExpectation.getCall(0), sinon.match('someSourceId'))
+        assert.equal(result.result, 0)
+    })
+
+    it("should not add user if target user is not found", async function () {
+        let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
+        let userRepoGetUserExpectation = userRepositoryMock.expects('getUser')
+        let userRepoAddFriendExpectation = userRepositoryMock.expects('addFriend')
+        userRepoFriendCheckExpectation.twice().resolves(false)
         userRepoGetUserExpectation.twice()
         userRepoGetUserExpectation.onCall(0).resolves({ found: true, name: 'sourceUserName' })
         userRepoGetUserExpectation.onCall(1).resolves({ found: false })
@@ -230,11 +337,18 @@ describe("should operate user operations", function () {
         userRepoFriendCheckExpectation.verify()
         userRepoGetUserExpectation.verify()
         userRepoAddFriendExpectation.verify()
-        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(0), sinon.match((friendRequest) => {
-            assert.equal(friendRequest.sourceUserId, 'someSourceId')
-            assert.equal(friendRequest.targetUserId, 'someTargetId')
-            assert.notExists(friendRequest.targetFriendName)
-            assert.notExists(friendRequest.status)
+        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(0), sinon.match((friendCheckInput) => {
+            assert.equal(friendCheckInput.sourceUserId, 'someSourceId')
+            assert.equal(friendCheckInput.targetUserId, 'someTargetId')
+            assert.notExists(friendCheckInput.targetFriendName)
+            assert.notExists(friendCheckInput.status)
+            return true
+        }))
+        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(1), sinon.match((friendCheckInput) => {
+            assert.equal(friendCheckInput.targetUserId, 'someSourceId')
+            assert.equal(friendCheckInput.sourceUserId, 'someTargetId')
+            assert.notExists(friendCheckInput.targetFriendName)
+            assert.notExists(friendCheckInput.status)
             return true
         }))
         sinon.assert.calledWith(userRepoGetUserExpectation.getCall(0), sinon.match('someSourceId'))
@@ -245,7 +359,7 @@ describe("should operate user operations", function () {
         let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
         let userRepoGetUserExpectation = userRepositoryMock.expects('getUser')
         let userRepoAddFriendExpectation = userRepositoryMock.expects('addFriend')
-        userRepoFriendCheckExpectation.once().resolves(false)
+        userRepoFriendCheckExpectation.twice().resolves(false)
         userRepoGetUserExpectation.twice()
         userRepoGetUserExpectation.onCall(0).resolves({ found: true, name: 'sourceUserName' })
         userRepoGetUserExpectation.onCall(1).resolves({ found: true, name: 'targetUserName' })
@@ -266,11 +380,18 @@ describe("should operate user operations", function () {
             assert.equal(friendRequest.status, 'awaiting')
             return true
         }))
-        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(0), sinon.match((friendRequest) => {
-            assert.equal(friendRequest.sourceUserId, 'someSourceId')
-            assert.equal(friendRequest.targetUserId, 'someTargetId')
-            assert.notExists(friendRequest.targetFriendName)
-            assert.notExists(friendRequest.status)
+        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(0), sinon.match((friendCheckInput) => {
+            assert.equal(friendCheckInput.sourceUserId, 'someSourceId')
+            assert.equal(friendCheckInput.targetUserId, 'someTargetId')
+            assert.notExists(friendCheckInput.targetFriendName)
+            assert.notExists(friendCheckInput.status)
+            return true
+        }))
+        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(1), sinon.match((friendCheckInput) => {
+            assert.equal(friendCheckInput.targetUserId, 'someSourceId')
+            assert.equal(friendCheckInput.sourceUserId, 'someTargetId')
+            assert.notExists(friendCheckInput.targetFriendName)
+            assert.notExists(friendCheckInput.status)
             return true
         }))
         assert.equal(result.result, -1)
