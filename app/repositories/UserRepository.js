@@ -100,7 +100,6 @@ var userRepository = {
                 console.log('Friendlist check throws error')
                 return { exists: false }
             })
-        console.log('target friend found to be ::' + JSON.stringify(targetFriend))
         if (!targetFriend.exists) {
             return false
         } else {
