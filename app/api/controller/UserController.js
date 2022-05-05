@@ -39,6 +39,27 @@ const isFriend = async function (request, response, next) {
         })
 }
 
+const confirmFriend = async function (request, response, next) {
+    const reqBody = request.body
+    await userService
+        .updateFriendStatus({
+            sourceUserId: reqBody.sourceUserId,
+            targetUserId: reqBody.targetUserId,
+            status: 'confirmed'
+        })
+        .then((output) => {
+            if (1 === output.result) {
+                response.status(200).send({ friendStatus: 'confirmed' })
+            } else {
+                response.status(400).send('update failed')
+            }
+
+        })
+        .catch(() => {
+            response.status(500).send('update failed')
+        })
+}
+
 const signUp = async function (request, response, next) {
     let validatedUserInput = userUtil.validateAndConvertUserCreateRequest(request)
     if (!validatedUserInput.valid) {
@@ -55,4 +76,4 @@ const signUp = async function (request, response, next) {
         })
 }
 
-module.exports = { signUp, addFriend, isFriend }
+module.exports = { signUp, addFriend, isFriend, confirmFriend }

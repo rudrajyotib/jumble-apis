@@ -71,6 +71,20 @@ var userRepository = {
         }
     },
 
+    updateFriendStatus: async function (friendsData) {
+        const sourceFriendId = friendsData.sourceUserId
+        const targetFriendId = friendsData.targetUserId
+        const targetFriend = await repository
+            .collection("friends")
+            .doc(sourceFriendId)
+            .collection('friendlist')
+            .doc(targetFriendId)
+        const result = await targetFriend
+            .update({ status: friendsData.status })
+            .then(() => { return true })
+            .catch(() => { return false })
+        return result
+    },
 
     isFriend: async function (friendRequest) {
 

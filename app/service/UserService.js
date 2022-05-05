@@ -66,6 +66,32 @@ module.exports = {
         return reverseResult
     },
 
+    updateFriendStatus: async function (data) {
+        const friendUpdateStatus = await userRepo
+            .updateFriendStatus({
+                sourceUserId: data.sourceUserId,
+                targetUserId: data.targetUserId,
+                status: data.status
+            })
+            .then(() => { return true })
+            .catch(() => { return false })
+        if (!friendUpdateStatus) {
+            return { result: -1, message: 'error in repository' }
+        }
+        const reverseFriendUpdateStatus = await userRepo
+            .updateFriendStatus({
+                sourceUserId: data.targetUserId,
+                targetUserId: data.sourceUserId,
+                status: data.status
+            })
+            .then(() => { return true })
+            .catch(() => { return false })
+        if (!reverseFriendUpdateStatus) {
+            return { result: -1, message: 'error in repository' }
+        }
+        return { result: 1, message: 'friend status updated' }
+    },
+
     isFriend: async function (data) {
         const result = await userRepo
             .isFriend({

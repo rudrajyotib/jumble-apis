@@ -224,4 +224,62 @@ describe("should execute all user repository tests", function () {
         assert.isFalse(friendExists)
     })
 
+    it('should update friend status', async function () {
+        let documentDataCollectionMockExpectation = documentDataMock.expects('collection')
+        let documentDataUpdateMockExpectation = documentDataMock.expects('update')
+        let documentDataSetMockExpectation = documentDataMock.expects('set')
+        documentDataCollectionMockExpectation.once().returns(firestoreCollection)
+        documentDataUpdateMockExpectation.once().resolves()
+        documentDataSetMockExpectation.never()
+        const result = await userRepo.updateFriendStatus({
+            sourceUserId: 'sourceUser',
+            targetUserId: 'targetUser',
+            status: 'someStatus'
+        })
+        assert.isTrue(result)
+        documentDataCollectionMockExpectation.verify()
+        documentDataUpdateMockExpectation.verify()
+        documentDataSetMockExpectation.verify()
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'sourceUser')
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(1), 'targetUser')
+        assert(firestoreCollectionSpy.calledTwice)
+        assert(firestoreSpy.calledOnce)
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
+        sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
+        sinon.assert.calledWith(documentDataUpdateMockExpectation.getCall(0), sinon.match((updateData) => {
+            assert.equal(updateData.status, 'someStatus')
+            assert.notExists(updateData.name)
+            return true
+        }))
+    })
+
+    it('should catch fail to update friend status', async function () {
+        let documentDataCollectionMockExpectation = documentDataMock.expects('collection')
+        let documentDataUpdateMockExpectation = documentDataMock.expects('update')
+        let documentDataSetMockExpectation = documentDataMock.expects('set')
+        documentDataCollectionMockExpectation.once().returns(firestoreCollection)
+        documentDataUpdateMockExpectation.once().rejects({ error: 'mockError' })
+        documentDataSetMockExpectation.never()
+        const result = await userRepo.updateFriendStatus({
+            sourceUserId: 'sourceUser',
+            targetUserId: 'targetUser',
+            status: 'someStatus'
+        })
+        assert.isFalse(result)
+        documentDataCollectionMockExpectation.verify()
+        documentDataUpdateMockExpectation.verify()
+        documentDataSetMockExpectation.verify()
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'sourceUser')
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(1), 'targetUser')
+        assert(firestoreCollectionSpy.calledTwice)
+        assert(firestoreSpy.calledOnce)
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
+        sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
+        sinon.assert.calledWith(documentDataUpdateMockExpectation.getCall(0), sinon.match((updateData) => {
+            assert.equal(updateData.status, 'someStatus')
+            assert.notExists(updateData.name)
+            return true
+        }))
+    })
+
 })

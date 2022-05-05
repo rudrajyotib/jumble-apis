@@ -161,4 +161,67 @@ describe("should do service operations", function () {
         assert.equal(response.text, "User not created")
     })
 
+    it("should confirm friends and return success", async function () {
+        let expectation = userServiceMock.expects('updateFriendStatus').once().resolves({
+            result: 1
+        })
+        const response = await request("http://localhost:3000")
+            .post("/user/confirmfriend")
+            .send({ sourceUserId: "someSourceId", targetUserId: "someTargetId", password: "somePassword" })
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation, sinon.match(function (actual) {
+            assert.equal(actual.sourceUserId, 'someSourceId')
+            assert.equal(actual.targetUserId, 'someTargetId')
+            assert.equal(actual.status, 'confirmed')
+            assert.notExists(actual.password)
+            return true
+        }, "does not match"))
+        assert.equal(response.status, 200)
+        assert.equal(response.body.friendStatus, "confirmed")
+    })
+
+    it("should handle and inform if friend confirmation fails gracefully", async function () {
+        let expectation = userServiceMock.expects('updateFriendStatus').once().resolves({
+            result: -1
+        })
+        const response = await request("http://localhost:3000")
+            .post("/user/confirmfriend")
+            .send({ sourceUserId: "someSourceId", targetUserId: "someTargetId", password: "somePassword" })
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation, sinon.match(function (actual) {
+            assert.equal(actual.sourceUserId, 'someSourceId')
+            assert.equal(actual.targetUserId, 'someTargetId')
+            assert.equal(actual.status, 'confirmed')
+            assert.notExists(actual.password)
+            return true
+        }, "does not match"))
+        assert.equal(response.status, 400)
+        assert.equal(response.text, "update failed")
+    })
+
+    it("should handle and inform if friend confirmation service throws unexpected", async function () {
+        let expectation = userServiceMock.expects('updateFriendStatus').once().rejects({
+            error: 'mock error'
+        })
+        const response = await request("http://localhost:3000")
+            .post("/user/confirmfriend")
+            .send({ sourceUserId: "someSourceId", targetUserId: "someTargetId", password: "somePassword" })
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation, sinon.match(function (actual) {
+            assert.equal(actual.sourceUserId, 'someSourceId')
+            assert.equal(actual.targetUserId, 'someTargetId')
+            assert.equal(actual.status, 'confirmed')
+            assert.notExists(actual.password)
+            return true
+        }, "does not match"))
+        assert.equal(response.status, 500)
+        assert.equal(response.text, "update failed")
+    })
+
 })

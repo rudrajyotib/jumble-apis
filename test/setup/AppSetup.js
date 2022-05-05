@@ -10,6 +10,10 @@ const firestoreDocument = {
     collection: function (data) {
         console.log('called setup for real')
         throw new Error('should always be mocked')
+    },
+    update: function (data) {
+        console.log('called setup for real')
+        throw new Error('should always be mocked')
     }
 }
 const firestoreCollection = {
