@@ -35,5 +35,6 @@ describe("Should execute all APIs", function () {
         require('./suites/api/LoginRoute')
         require('./suites/api/util/UserApiUtilTest')
         require('./suites/config/ConfigurationTest')
+        require('./suites/api/UserRouteTest')
     })
 })

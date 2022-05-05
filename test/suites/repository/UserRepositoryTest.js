@@ -10,19 +10,27 @@ describe("should execute all user repository tests", function () {
     let documentDataMock
     let userRepo
     let firestoreCollectionSpy
+    let firestoreCollection
+    let firestoreSpy
+    let firestore
+
 
     before(function () {
         userRepo = require('../../../app/repositories/UserRepository')
+        firestoreCollection = require('../../setup/AppSetup').firestoreCollection
+        firestore = require('../../setup/AppSetup').firestore
     })
 
     beforeEach(function () {
         documentDataMock = sinon.mock(firebaseSetup.firestoreDocument)
         firestoreCollectionSpy = sinon.spy(firebaseSetup.firestoreCollection, 'doc')
+        firestoreSpy = sinon.spy(firestore, 'collection')
     })
 
     afterEach(function () {
         documentDataMock.restore()
         firestoreCollectionSpy.restore()
+        firestoreSpy.restore()
     })
 
     it('should add user', async function () {
@@ -85,7 +93,7 @@ describe("should execute all user repository tests", function () {
         assert.isFalse(user.found)
     })
 
-    it('should indicate in response when remote promise fails', async function () {
+    it('should indicate in response when remote promise fails to find a user', async function () {
         let expectation = documentDataMock.expects('get').once().rejects('some error in remote')
         const user = await userRepo.getUser('someId')
         expectation.verify()
@@ -94,13 +102,126 @@ describe("should execute all user repository tests", function () {
         assert.isFalse(user.found)
     })
 
-    it('should indicate in response when execution fails', async function () {
+    it('should indicate in response when execution fails to find a user', async function () {
         let expectation = documentDataMock.expects('get').once().throws('some error')
         const user = await userRepo.getUser('someId')
         expectation.verify()
         sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someId')
         assert(firestoreCollectionSpy.calledOnce)
         assert.isFalse(user.found)
+    })
+
+    it('should add friend', async function () {
+        let documentDataCollectionMockExpectation = documentDataMock.expects('collection')
+        let documentDataGetMockExpectation = documentDataMock.expects('get')
+        let documentDataSetMockExpectation = documentDataMock.expects('set')
+        documentDataCollectionMockExpectation.once().returns(firestoreCollection)
+        documentDataGetMockExpectation.once().resolves({ exists: false })
+        documentDataSetMockExpectation.once().resolves()
+        await userRepo.addFriend({
+            sourceUserId: 'sourceUser',
+            targetUserId: 'targetUser',
+            targetFriendName: 'friendName',
+            status: 'someStatus'
+        })
+        documentDataCollectionMockExpectation.verify()
+        documentDataGetMockExpectation.verify()
+        documentDataSetMockExpectation.verify()
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'sourceUser')
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(1), 'targetUser')
+        assert(firestoreCollectionSpy.calledTwice)
+        assert(firestoreSpy.calledOnce)
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
+        sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
+        sinon.assert.calledWith(documentDataSetMockExpectation.getCall(0), sinon.match((targetFriend) => {
+            assert.equal('friendName', targetFriend.name)
+            assert.equal('someStatus', targetFriend.status)
+            return true
+        }))
+    })
+
+    it('should not add friend if exist', async function () {
+        let documentDataCollectionMockExpectation = documentDataMock.expects('collection')
+        let documentDataGetMockExpectation = documentDataMock.expects('get')
+        let documentDataSetMockExpectation = documentDataMock.expects('set')
+        documentDataCollectionMockExpectation.once().returns(firestoreCollection)
+        documentDataGetMockExpectation.once().resolves({ exists: true })
+        documentDataSetMockExpectation.never()
+        await userRepo.addFriend({
+            sourceUserId: 'sourceUser',
+            targetUserId: 'targetUser',
+            targetFriendName: 'friendName',
+            status: 'someStatus'
+        })
+        documentDataCollectionMockExpectation.verify()
+        documentDataGetMockExpectation.verify()
+        documentDataSetMockExpectation.verify()
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'sourceUser')
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(1), 'targetUser')
+        assert(firestoreCollectionSpy.calledTwice)
+        assert(firestoreSpy.calledOnce)
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
+        sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
+    })
+
+    it('should assert friend entity exists', async function () {
+        let documentDataCollectionMockExpectation = documentDataMock.expects('collection')
+        let documentDataGetMockExpectation = documentDataMock.expects('get')
+        documentDataCollectionMockExpectation.once().returns(firestoreCollection)
+        documentDataGetMockExpectation.once().resolves({ exists: true })
+        const friendExists = await userRepo.isFriend({
+            sourceUserId: 'sourceUser',
+            targetUserId: 'targetUser'
+        })
+        documentDataCollectionMockExpectation.verify()
+        documentDataGetMockExpectation.verify()
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'sourceUser')
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(1), 'targetUser')
+        assert(firestoreCollectionSpy.calledTwice)
+        assert(firestoreSpy.calledOnce)
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
+        sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
+        assert.isTrue(friendExists)
+    })
+
+    it('should negate friend entity exists', async function () {
+        let documentDataCollectionMockExpectation = documentDataMock.expects('collection')
+        let documentDataGetMockExpectation = documentDataMock.expects('get')
+        documentDataCollectionMockExpectation.once().returns(firestoreCollection)
+        documentDataGetMockExpectation.once().resolves({ exists: false })
+        const friendExists = await userRepo.isFriend({
+            sourceUserId: 'sourceUser',
+            targetUserId: 'targetUser'
+        })
+        documentDataCollectionMockExpectation.verify()
+        documentDataGetMockExpectation.verify()
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'sourceUser')
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(1), 'targetUser')
+        assert(firestoreCollectionSpy.calledTwice)
+        assert(firestoreSpy.calledOnce)
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
+        sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
+        assert.isFalse(friendExists)
+    })
+
+    it('should negate friend entity exists when promise fails to get user', async function () {
+        let documentDataCollectionMockExpectation = documentDataMock.expects('collection')
+        let documentDataGetMockExpectation = documentDataMock.expects('get')
+        documentDataCollectionMockExpectation.once().returns(firestoreCollection)
+        documentDataGetMockExpectation.once().rejects('mock error')
+        const friendExists = await userRepo.isFriend({
+            sourceUserId: 'sourceUser',
+            targetUserId: 'targetUser'
+        })
+        documentDataCollectionMockExpectation.verify()
+        documentDataGetMockExpectation.verify()
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'sourceUser')
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(1), 'targetUser')
+        assert(firestoreCollectionSpy.calledTwice)
+        assert(firestoreSpy.calledOnce)
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
+        sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
+        assert.isFalse(friendExists)
     })
 
 })

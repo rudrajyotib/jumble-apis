@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router()
 const challengeRouter = require('./ChallengeRouter')
-const loginRouter = require('./LoginRouter')
+
+const userRouter = require('./UserRouter')
 
 router.use('/challenge', challengeRouter)
-router.use('/login', loginRouter)
+router.use('/user', userRouter)
 
 module.exports = router

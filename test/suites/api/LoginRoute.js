@@ -24,7 +24,7 @@ describe("should do service operations", function () {
     it("should add User", async function () {
         let expectation = userServiceMock.expects('addUser').once().resolves('someId')
         const response = await request("http://localhost:3000")
-            .post("/login/signup")
+            .post("/user/signup")
             .send({ name: "someName", email: "someEmail", password: "somePassword" })
             .set('Accept', 'application/json')
 
@@ -42,7 +42,7 @@ describe("should do service operations", function () {
     it("should report when User input is not correct", async function () {
         let expectation = userServiceMock.expects('addUser').never()
         const response = await request("http://localhost:3000")
-            .post("/login/signup")
+            .post("/user/signup")
             .send({ email: "someEmail", password: "somePassword" })
             .set('Accept', 'application/json')
 
@@ -54,7 +54,7 @@ describe("should do service operations", function () {
     it("should report internal server error when service fails", async function () {
         let expectation = userServiceMock.expects('addUser').once().rejects("server error")
         const response = await request("http://localhost:3000")
-            .post("/login/signup")
+            .post("/user/signup")
             .send({ name: "someName", email: "someEmail", password: "somePassword" })
             .set('Accept', 'application/json')
 
@@ -68,4 +68,6 @@ describe("should do service operations", function () {
         assert.equal(response.status, 500)
         assert.equal(response.text, "User not created")
     })
+
+
 })

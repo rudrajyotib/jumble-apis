@@ -36,19 +36,65 @@ var userRepository = {
                 })
             if (!user.exists) {
                 return { found: false }
-            } else {
-                userData = user.data()
-                return {
-                    found: true,
-                    id: userId,
-                    name: userData.name,
-                    email: userData.email
-                }
             }
+            userData = user.data()
+            return {
+                found: true,
+                id: userId,
+                name: userData.name,
+                email: userData.email
+            }
+
         } catch (err) {
             return { found: false }
         }
+    },
+
+    addFriend: async function (friendRequest) {
+        const sourceFriendId = friendRequest.sourceUserId
+        const targetFriendId = friendRequest.targetUserId
+        const targetFriendName = friendRequest.targetFriendName
+        const friendRequestStatus = friendRequest.status
+        const targetFriend = await repository
+            .collection("friends")
+            .doc(sourceFriendId)
+            .collection('friendlist')
+            .doc(targetFriendId)
+
+        const targetFriendData = await targetFriend.get()
+
+        if (!targetFriendData.exists) {
+            await targetFriend.set({
+                name: targetFriendName,
+                status: friendRequestStatus
+            })
+        }
+    },
+
+
+    isFriend: async function (friendRequest) {
+
+        const sourceFriendId = friendRequest.sourceUserId
+        const targetFriendId = friendRequest.targetUserId
+        const targetFriend = await repository
+            .collection("friends")
+            .doc(sourceFriendId)
+            .collection('friendlist')
+            .doc(targetFriendId)
+            .get()
+            .catch((err) => {
+                console.log('Friendlist check throws error')
+                return { exists: false }
+            })
+        console.log('target friend found to be ::' + JSON.stringify(targetFriend))
+        if (!targetFriend.exists) {
+            return false
+        } else {
+            return true
+        }
     }
+
+
 
 }
 

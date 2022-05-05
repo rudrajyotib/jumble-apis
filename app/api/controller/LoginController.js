@@ -18,6 +18,4 @@ const signUp = async function (request, response, next) {
         })
 }
 
-
-
 module.exports = { signUp }
