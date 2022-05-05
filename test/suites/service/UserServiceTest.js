@@ -465,7 +465,65 @@ describe("should operate user operations", function () {
         }))
     })
 
-    it("should report failure if first update is failed", async function () {
+    it("should report failure if friend status first update fails gracefully", async function () {
+        let userRepoFriendUpdateStatusExpectation = userRepositoryMock.expects('updateFriendStatus')
+        userRepoFriendUpdateStatusExpectation.once().resolves(false)
+        const result = await userService.updateFriendStatus({
+            sourceUserId: 'someSourceId',
+            targetUserId: 'someTargetId',
+            status: 'someStatus',
+            junk: 'not to be passed down'
+        })
+        assert.equal(result.result, -1)
+        assert.equal(result.message, 'error in repository')
+        userRepoFriendUpdateStatusExpectation.verify()
+        sinon.assert.calledWith(userRepoFriendUpdateStatusExpectation.getCall(0), sinon.match((friendRequest) => {
+            assert.equal(friendRequest.sourceUserId, 'someSourceId')
+            assert.equal(friendRequest.targetUserId, 'someTargetId')
+            assert.equal(friendRequest.status, 'someStatus')
+            assert.notExists(friendRequest.junk)
+            return true
+        }))
+        // sinon.assert.calledWith(userRepoFriendUpdateStatusExpectation.getCall(1), sinon.match((friendRequest) => {
+        //     assert.equal(friendRequest.targetUserId, 'someSourceId')
+        //     assert.equal(friendRequest.sourceUserId, 'someTargetId')
+        //     assert.equal(friendRequest.status, 'someStatus')
+        //     assert.notExists(friendRequest.junk)
+        //     return true
+        // }))
+    })
+
+    it("should report failure if friend status second update fails gracefully", async function () {
+        let userRepoFriendUpdateStatusExpectation = userRepositoryMock.expects('updateFriendStatus')
+        userRepoFriendUpdateStatusExpectation.twice()
+        userRepoFriendUpdateStatusExpectation.onCall(0).resolves(true)
+        userRepoFriendUpdateStatusExpectation.onCall(1).resolves(false)
+        const result = await userService.updateFriendStatus({
+            sourceUserId: 'someSourceId',
+            targetUserId: 'someTargetId',
+            status: 'someStatus',
+            junk: 'not to be passed down'
+        })
+        assert.equal(result.result, -1)
+        assert.equal(result.message, 'error in repository')
+        userRepoFriendUpdateStatusExpectation.verify()
+        sinon.assert.calledWith(userRepoFriendUpdateStatusExpectation.getCall(0), sinon.match((friendRequest) => {
+            assert.equal(friendRequest.sourceUserId, 'someSourceId')
+            assert.equal(friendRequest.targetUserId, 'someTargetId')
+            assert.equal(friendRequest.status, 'someStatus')
+            assert.notExists(friendRequest.junk)
+            return true
+        }))
+        sinon.assert.calledWith(userRepoFriendUpdateStatusExpectation.getCall(1), sinon.match((friendRequest) => {
+            assert.equal(friendRequest.targetUserId, 'someSourceId')
+            assert.equal(friendRequest.sourceUserId, 'someTargetId')
+            assert.equal(friendRequest.status, 'someStatus')
+            assert.notExists(friendRequest.junk)
+            return true
+        }))
+    })
+
+    it("should report failure if first update is failed unexpected in repository", async function () {
         let userRepoFriendUpdateStatusExpectation = userRepositoryMock.expects('updateFriendStatus')
         userRepoFriendUpdateStatusExpectation.once().rejects({ error: 'mock error' })
         const result = await userService.updateFriendStatus({
@@ -486,10 +544,10 @@ describe("should operate user operations", function () {
         }))
     })
 
-    it("should report failure if reverse update fails", async function () {
+    it("should report failure if reverse update fails unexpected in repository", async function () {
         let userRepoFriendUpdateStatusExpectation = userRepositoryMock.expects('updateFriendStatus')
         userRepoFriendUpdateStatusExpectation.twice()
-        userRepoFriendUpdateStatusExpectation.onCall(0).resolves()
+        userRepoFriendUpdateStatusExpectation.onCall(0).resolves(true)
         userRepoFriendUpdateStatusExpectation.onCall(1).rejects({ error: 'mock error' })
         const result = await userService.updateFriendStatus({
             sourceUserId: 'someSourceId',

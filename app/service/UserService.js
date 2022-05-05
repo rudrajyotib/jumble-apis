@@ -73,7 +73,6 @@ module.exports = {
                 targetUserId: data.targetUserId,
                 status: data.status
             })
-            .then(() => { return true })
             .catch(() => { return false })
         if (!friendUpdateStatus) {
             return { result: -1, message: 'error in repository' }
@@ -84,7 +83,6 @@ module.exports = {
                 targetUserId: data.sourceUserId,
                 status: data.status
             })
-            .then(() => { return true })
             .catch(() => { return false })
         if (!reverseFriendUpdateStatus) {
             return { result: -1, message: 'error in repository' }
