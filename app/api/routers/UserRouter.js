@@ -6,6 +6,7 @@ loginRouter.post("/addfriend", userController.addFriend)
 loginRouter.get("/isfriend", userController.isFriend)
 loginRouter.post("/signup", userController.signUp)
 loginRouter.post("/confirmfriend", userController.confirmFriend)
+loginRouter.get("/friends/:userId", userController.listFriends)
 
 
 module.exports = loginRouter

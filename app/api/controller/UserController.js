@@ -34,7 +34,6 @@ const isFriend = async function (request, response, next) {
             response.status(200).send({ friend: isFriend })
         })
         .catch((error) => {
-            console.log(JSON.stringify(error))
             response.status(500).send("User not created")
         })
 }
@@ -53,7 +52,6 @@ const confirmFriend = async function (request, response, next) {
             } else {
                 response.status(400).send('update failed')
             }
-
         })
         .catch(() => {
             response.status(500).send('update failed')
@@ -76,4 +74,23 @@ const signUp = async function (request, response, next) {
         })
 }
 
-module.exports = { signUp, addFriend, isFriend, confirmFriend }
+const listFriends = async function (request, response, next) {
+    const userId = request.params.userId
+    await userService
+        .listOfConfirmedFriends({ sourceUserId: userId })
+        .then((result) => {
+            if (1 === result.result) {
+                if (result.friends && result.friends.length > 1) {
+                    response.status(200).send(result.friends)
+                } else {
+                    response.status(204).send()
+                }
+            } else {
+                response.status(500).send('no result')
+            }
+        }).catch((error) => {
+            response.status(500).send('no result')
+        })
+}
+
+module.exports = { signUp, addFriend, isFriend, confirmFriend, listFriends }

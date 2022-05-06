@@ -573,4 +573,63 @@ describe("should operate user operations", function () {
             return true
         }))
     })
+
+    it("should list all confirmed friends", async function () {
+        let userRepoFriendSearchExpectation = userRepositoryMock.expects('friendsWithStatus')
+        userRepoFriendSearchExpectation.once().resolves({
+            errorCode: 1,
+            friends: [{ id: 1, name: "nameOne" }, { id: 2, name: "nameTwo" }]
+        })
+        const result = await userService.listOfConfirmedFriends({
+            sourceUserId: "someSourceUserId"
+        })
+        userRepoFriendSearchExpectation.verify()
+        sinon.assert.calledWith(userRepoFriendSearchExpectation.getCall(0), sinon.match((searchRequest) => {
+            assert.equal(searchRequest.sourceUserId, "someSourceUserId")
+            assert.equal(searchRequest.status, "confirmed")
+            return true
+        }))
+        assert.equal(result.result, 1)
+        assert.equal(result.friends.length, 2)
+        assert.equal(result.friends[0].id, 1)
+        assert.equal(result.friends[1].id, 2)
+        assert.equal(result.friends[0].name, 'nameOne')
+        assert.equal(result.friends[1].name, 'nameTwo')
+    })
+
+    it("should handle graceful error scenario from repository while searching confirmed friends", async function () {
+        let userRepoFriendSearchExpectation = userRepositoryMock.expects('friendsWithStatus')
+        userRepoFriendSearchExpectation.once().resolves({
+            errorCode: -1
+        })
+        const result = await userService.listOfConfirmedFriends({
+            sourceUserId: "someSourceUserId"
+        })
+        userRepoFriendSearchExpectation.verify()
+        sinon.assert.calledWith(userRepoFriendSearchExpectation.getCall(0), sinon.match((searchRequest) => {
+            assert.equal(searchRequest.sourceUserId, "someSourceUserId")
+            assert.equal(searchRequest.status, "confirmed")
+            return true
+        }))
+        assert.equal(result.result, -1)
+        assert.notExists(result.friends)
+    })
+
+    it("should handle runtime error scenario from repository while searching confirmed friends", async function () {
+        let userRepoFriendSearchExpectation = userRepositoryMock.expects('friendsWithStatus')
+        userRepoFriendSearchExpectation.once().rejects({
+            error: 'mock error'
+        })
+        const result = await userService.listOfConfirmedFriends({
+            sourceUserId: "someSourceUserId"
+        })
+        userRepoFriendSearchExpectation.verify()
+        sinon.assert.calledWith(userRepoFriendSearchExpectation.getCall(0), sinon.match((searchRequest) => {
+            assert.equal(searchRequest.sourceUserId, "someSourceUserId")
+            assert.equal(searchRequest.status, "confirmed")
+            return true
+        }))
+        assert.equal(result.result, -1)
+        assert.notExists(result.friends)
+    })
 })

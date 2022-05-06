@@ -86,6 +86,33 @@ var userRepository = {
         return result
     },
 
+    friendsWithStatus: async function (friendsData) {
+        const sourceFriendId = friendsData.sourceUserId
+        // const targetFriendId = friendsData.targetUserId
+        const targetFriendList = await repository
+            .collection("friends")
+            .doc(sourceFriendId)
+            .collection('friendlist')
+
+        const result = { errorCode: 0, friends: [] }
+        await targetFriendList
+            .where("status", "=", friendsData.status)
+            .get()
+            .then((querySnapshot) => {
+                result.errorCode = 1
+                querySnapshot.forEach((doc) => {
+                    result.friends.push({
+                        id: doc.id,
+                        name: doc.data().name
+                    })
+                })
+            })
+            .catch((err) => {
+                result.errorCode = -1
+            })
+        return result
+    },
+
     isFriend: async function (friendRequest) {
 
         const sourceFriendId = friendRequest.sourceUserId

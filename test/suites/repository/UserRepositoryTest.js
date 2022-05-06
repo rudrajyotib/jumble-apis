@@ -8,8 +8,10 @@ const { assert } = require('chai')
 describe("should execute all user repository tests", function () {
 
     let documentDataMock
+    let querySnapshotMock
     let userRepo
-    let firestoreCollectionSpy
+    let firestoreGetCollectionSpy
+    let firestoreWhereCollectionSpy
     let firestoreCollection
     let firestoreSpy
     let firestore
@@ -23,14 +25,18 @@ describe("should execute all user repository tests", function () {
 
     beforeEach(function () {
         documentDataMock = sinon.mock(firebaseSetup.firestoreDocument)
-        firestoreCollectionSpy = sinon.spy(firebaseSetup.firestoreCollection, 'doc')
+        querySnapshotMock = sinon.mock(firebaseSetup.querySnapshot)
+        firestoreGetCollectionSpy = sinon.spy(firebaseSetup.firestoreCollection, 'doc')
+        firestoreWhereCollectionSpy = sinon.spy(firebaseSetup.firestoreCollection, 'where')
         firestoreSpy = sinon.spy(firestore, 'collection')
     })
 
     afterEach(function () {
         documentDataMock.restore()
-        firestoreCollectionSpy.restore()
+        firestoreGetCollectionSpy.restore()
+        firestoreWhereCollectionSpy.restore()
         firestoreSpy.restore()
+        querySnapshotMock.restore()
     })
 
     it('should add user', async function () {
@@ -43,7 +49,7 @@ describe("should execute all user repository tests", function () {
             assert.equal('someEmail', user.email)
             return true
         }))
-        assert(firestoreCollectionSpy.calledOnce)
+        assert(firestoreGetCollectionSpy.calledOnce)
     })
 
     it('should handle failure to add user', async function () {
@@ -72,8 +78,8 @@ describe("should execute all user repository tests", function () {
         })
         const user = await userRepo.getUser('someId')
         expectation.verify()
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someId')
-        assert(firestoreCollectionSpy.calledOnce)
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(0), 'someId')
+        assert(firestoreGetCollectionSpy.calledOnce)
         assert(user, sinon.match((user) => {
             assert.equal('someId', user.id)
             assert.isTrue(user.found)
@@ -88,8 +94,8 @@ describe("should execute all user repository tests", function () {
         })
         const user = await userRepo.getUser('someId')
         expectation.verify()
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someId')
-        assert(firestoreCollectionSpy.calledOnce)
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(0), 'someId')
+        assert(firestoreGetCollectionSpy.calledOnce)
         assert.isFalse(user.found)
     })
 
@@ -97,8 +103,8 @@ describe("should execute all user repository tests", function () {
         let expectation = documentDataMock.expects('get').once().rejects('some error in remote')
         const user = await userRepo.getUser('someId')
         expectation.verify()
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someId')
-        assert(firestoreCollectionSpy.calledOnce)
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(0), 'someId')
+        assert(firestoreGetCollectionSpy.calledOnce)
         assert.isFalse(user.found)
     })
 
@@ -106,8 +112,8 @@ describe("should execute all user repository tests", function () {
         let expectation = documentDataMock.expects('get').once().throws('some error')
         const user = await userRepo.getUser('someId')
         expectation.verify()
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someId')
-        assert(firestoreCollectionSpy.calledOnce)
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(0), 'someId')
+        assert(firestoreGetCollectionSpy.calledOnce)
         assert.isFalse(user.found)
     })
 
@@ -127,9 +133,9 @@ describe("should execute all user repository tests", function () {
         documentDataCollectionMockExpectation.verify()
         documentDataGetMockExpectation.verify()
         documentDataSetMockExpectation.verify()
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'sourceUser')
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(1), 'targetUser')
-        assert(firestoreCollectionSpy.calledTwice)
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(0), 'sourceUser')
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(1), 'targetUser')
+        assert(firestoreGetCollectionSpy.calledTwice)
         assert(firestoreSpy.calledOnce)
         sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
         sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
@@ -156,9 +162,9 @@ describe("should execute all user repository tests", function () {
         documentDataCollectionMockExpectation.verify()
         documentDataGetMockExpectation.verify()
         documentDataSetMockExpectation.verify()
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'sourceUser')
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(1), 'targetUser')
-        assert(firestoreCollectionSpy.calledTwice)
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(0), 'sourceUser')
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(1), 'targetUser')
+        assert(firestoreGetCollectionSpy.calledTwice)
         assert(firestoreSpy.calledOnce)
         sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
         sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
@@ -175,9 +181,9 @@ describe("should execute all user repository tests", function () {
         })
         documentDataCollectionMockExpectation.verify()
         documentDataGetMockExpectation.verify()
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'sourceUser')
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(1), 'targetUser')
-        assert(firestoreCollectionSpy.calledTwice)
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(0), 'sourceUser')
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(1), 'targetUser')
+        assert(firestoreGetCollectionSpy.calledTwice)
         assert(firestoreSpy.calledOnce)
         sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
         sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
@@ -195,9 +201,9 @@ describe("should execute all user repository tests", function () {
         })
         documentDataCollectionMockExpectation.verify()
         documentDataGetMockExpectation.verify()
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'sourceUser')
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(1), 'targetUser')
-        assert(firestoreCollectionSpy.calledTwice)
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(0), 'sourceUser')
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(1), 'targetUser')
+        assert(firestoreGetCollectionSpy.calledTwice)
         assert(firestoreSpy.calledOnce)
         sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
         sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
@@ -215,9 +221,9 @@ describe("should execute all user repository tests", function () {
         })
         documentDataCollectionMockExpectation.verify()
         documentDataGetMockExpectation.verify()
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'sourceUser')
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(1), 'targetUser')
-        assert(firestoreCollectionSpy.calledTwice)
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(0), 'sourceUser')
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(1), 'targetUser')
+        assert(firestoreGetCollectionSpy.calledTwice)
         assert(firestoreSpy.calledOnce)
         sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
         sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
@@ -240,9 +246,9 @@ describe("should execute all user repository tests", function () {
         documentDataCollectionMockExpectation.verify()
         documentDataUpdateMockExpectation.verify()
         documentDataSetMockExpectation.verify()
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'sourceUser')
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(1), 'targetUser')
-        assert(firestoreCollectionSpy.calledTwice)
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(0), 'sourceUser')
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(1), 'targetUser')
+        assert(firestoreGetCollectionSpy.calledTwice)
         assert(firestoreSpy.calledOnce)
         sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
         sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
@@ -269,9 +275,9 @@ describe("should execute all user repository tests", function () {
         documentDataCollectionMockExpectation.verify()
         documentDataUpdateMockExpectation.verify()
         documentDataSetMockExpectation.verify()
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'sourceUser')
-        sinon.assert.calledWith(firestoreCollectionSpy.getCall(1), 'targetUser')
-        assert(firestoreCollectionSpy.calledTwice)
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(0), 'sourceUser')
+        sinon.assert.calledWith(firestoreGetCollectionSpy.getCall(1), 'targetUser')
+        assert(firestoreGetCollectionSpy.calledTwice)
         assert(firestoreSpy.calledOnce)
         sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
         sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
@@ -281,5 +287,79 @@ describe("should execute all user repository tests", function () {
             return true
         }))
     })
+
+    it("should query friends with status and return a list with success code", async function () {
+        let documentDataCollectionMockExpectation = documentDataMock.expects('collection')
+        let querySnapshotGetMockExpectation = querySnapshotMock.expects('get')
+        documentDataCollectionMockExpectation.once().returns(firestoreCollection)
+        querySnapshotGetMockExpectation.once().resolves([
+            { id: 1, data: function () { return { name: 'nameOfOne' } } },
+            { id: 2, data: function () { return { name: 'nameOfTwo' } } }
+        ])
+        const result = await userRepo.friendsWithStatus({
+            sourceUserId: 'sourceUser',
+            status: 'someStatus'
+        })
+        documentDataCollectionMockExpectation.verify()
+        querySnapshotGetMockExpectation.verify()
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
+        assert(firestoreSpy.calledOnce)
+        sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
+        sinon.assert.calledWith(firestoreWhereCollectionSpy.getCall(0), 'status', '=', 'someStatus')
+        assert(firestoreWhereCollectionSpy.calledOnce)
+        assert.equal(result.errorCode, 1)
+        assert.equal(result.friends.length, 2)
+        sinon.assert.match(result.friends[0], sinon.match((friend) => {
+            assert.equal(friend.id, 1)
+            assert.equal(friend.name, 'nameOfOne')
+            return true
+        }))
+        sinon.assert.match(result.friends[1], sinon.match((friend) => {
+            assert.equal(friend.id, 2)
+            assert.equal(friend.name, 'nameOfTwo')
+            return true
+        }))
+    })
+
+    it("should query friends with status and return a blank list of friends", async function () {
+        let documentDataCollectionMockExpectation = documentDataMock.expects('collection')
+        let querySnapshotGetMockExpectation = querySnapshotMock.expects('get')
+        documentDataCollectionMockExpectation.once().returns(firestoreCollection)
+        querySnapshotGetMockExpectation.once().resolves([])
+        const result = await userRepo.friendsWithStatus({
+            sourceUserId: 'sourceUser',
+            status: 'someStatus'
+        })
+        documentDataCollectionMockExpectation.verify()
+        querySnapshotGetMockExpectation.verify()
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
+        assert(firestoreSpy.calledOnce)
+        sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
+        sinon.assert.calledWith(firestoreWhereCollectionSpy.getCall(0), 'status', '=', 'someStatus')
+        assert(firestoreWhereCollectionSpy.calledOnce)
+        assert.equal(result.errorCode, 1)
+        assert.equal(result.friends.length, 0)
+    })
+
+    it("should handle errors in query", async function () {
+        let documentDataCollectionMockExpectation = documentDataMock.expects('collection')
+        let querySnapshotGetMockExpectation = querySnapshotMock.expects('get')
+        documentDataCollectionMockExpectation.once().returns(firestoreCollection)
+        querySnapshotGetMockExpectation.once().rejects({ error: "mock error" })
+        const result = await userRepo.friendsWithStatus({
+            sourceUserId: 'sourceUser',
+            status: 'someStatus'
+        })
+        documentDataCollectionMockExpectation.verify()
+        querySnapshotGetMockExpectation.verify()
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'friends')
+        assert(firestoreSpy.calledOnce)
+        sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
+        sinon.assert.calledWith(firestoreWhereCollectionSpy.getCall(0), 'status', '=', 'someStatus')
+        assert(firestoreWhereCollectionSpy.calledOnce)
+        assert.equal(result.errorCode, -1)
+        assert.equal(result.friends.length, 0)
+    })
+
 
 })

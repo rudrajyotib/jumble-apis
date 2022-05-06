@@ -90,6 +90,21 @@ module.exports = {
         return { result: 1, message: 'friend status updated' }
     },
 
+    listOfConfirmedFriends: async function (data) {
+        const userId = data.sourceUserId
+
+        const friendSearchResult = await userRepo
+            .friendsWithStatus({
+                sourceUserId: userId,
+                status: 'confirmed'
+            })
+            .catch(() => { return { errorCode: -1 } })
+        if (-1 === friendSearchResult.errorCode) {
+            return { result: -1 }
+        }
+        return { result: 1, friends: friendSearchResult.friends }
+    },
+
     isFriend: async function (data) {
         const result = await userRepo
             .isFriend({

@@ -16,9 +16,18 @@ const firestoreDocument = {
         throw new Error('should always be mocked')
     }
 }
+const querySnapshot = {
+    get: async function (data) {
+        console.log('called setup for real')
+        throw new Error('should always be mocked')
+    }
+}
 const firestoreCollection = {
     doc: (documentId) => {
         return firestoreDocument
+    },
+    where: (...args) => {
+        return querySnapshot
     }
 }
 const firestore = {
@@ -37,4 +46,5 @@ const authenticator = {
 exports.firestore = firestore
 exports.firestoreCollection = firestoreCollection
 exports.firestoreDocument = firestoreDocument
+exports.querySnapshot = querySnapshot
 exports.auth = authenticator
