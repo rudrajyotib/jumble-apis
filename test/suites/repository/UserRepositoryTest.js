@@ -128,7 +128,8 @@ describe("should execute all user repository tests", function () {
             sourceUserId: 'sourceUser',
             targetUserId: 'targetUser',
             targetFriendName: 'friendName',
-            status: 'someStatus'
+            status: 'someStatus',
+            duelId: 'someDuelId'
         })
         documentDataCollectionMockExpectation.verify()
         documentDataGetMockExpectation.verify()
@@ -142,6 +143,7 @@ describe("should execute all user repository tests", function () {
         sinon.assert.calledWith(documentDataSetMockExpectation.getCall(0), sinon.match((targetFriend) => {
             assert.equal('friendName', targetFriend.name)
             assert.equal('someStatus', targetFriend.status)
+            assert.equal('someDuelId', targetFriend.duelId)
             return true
         }))
     })
@@ -157,7 +159,8 @@ describe("should execute all user repository tests", function () {
             sourceUserId: 'sourceUser',
             targetUserId: 'targetUser',
             targetFriendName: 'friendName',
-            status: 'someStatus'
+            status: 'someStatus',
+            duelId: 'someDuelId'
         })
         documentDataCollectionMockExpectation.verify()
         documentDataGetMockExpectation.verify()

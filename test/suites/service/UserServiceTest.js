@@ -166,6 +166,8 @@ describe("should operate user operations", function () {
             assert.equal(friendRequest.targetUserId, 'someTargetId')
             assert.equal(friendRequest.targetFriendName, 'targetUserName')
             assert.equal(friendRequest.status, 'awaiting')
+            assert.exists(friendRequest.duelId)
+            assert.isNotEmpty(friendRequest.duelId)
             return true
         }))
         sinon.assert.calledWith(userRepoAddFriendExpectation.getCall(1), sinon.match((friendRequest) => {
@@ -173,6 +175,8 @@ describe("should operate user operations", function () {
             assert.equal(friendRequest.sourceUserId, 'someTargetId')
             assert.equal(friendRequest.targetFriendName, 'sourceUserName')
             assert.equal(friendRequest.status, 'awaiting')
+            assert.exists(friendRequest.duelId)
+            assert.isNotEmpty(friendRequest.duelId)
             return true
         }))
 
@@ -218,6 +222,8 @@ describe("should operate user operations", function () {
             assert.equal(friendRequest.targetUserId, 'someTargetId')
             assert.equal(friendRequest.targetFriendName, 'targetUserName')
             assert.equal(friendRequest.status, 'awaiting')
+            assert.exists(friendRequest.duelId)
+            assert.isNotEmpty(friendRequest.duelId)
             return true
         }))
         sinon.assert.calledWith(userRepoAddFriendExpectation.getCall(1), sinon.match((friendRequest) => {
@@ -225,6 +231,8 @@ describe("should operate user operations", function () {
             assert.equal(friendRequest.sourceUserId, 'someTargetId')
             assert.equal(friendRequest.targetFriendName, 'sourceUserName')
             assert.equal(friendRequest.status, 'awaiting')
+            assert.exists(friendRequest.duelId)
+            assert.isNotEmpty(friendRequest.duelId)
             return true
         }))
 

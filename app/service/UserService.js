@@ -1,6 +1,6 @@
 const userRepo = require('../repositories/UserRepository')
 const onlineUserRepo = require('../repositories/OnlineUserRepository')
-const { addFriend } = require('../repositories/UserRepository')
+const { v4: uuidv4 } = require('uuid')
 
 module.exports = {
 
@@ -22,6 +22,7 @@ module.exports = {
     },
 
     addFriend: async function (data) {
+        const duelId = uuidv4()
         const friendRelationExists = await userRepo.isFriend({
             sourceUserId: data.sourceUserId,
             targetUserId: data.targetUserId
@@ -45,7 +46,7 @@ module.exports = {
             return { result: 0, message: 'target friend user does not exist' }
         }
         const result = await userRepo
-            .addFriend({ sourceUserId: data.sourceUserId, targetUserId: data.targetUserId, targetFriendName: targetUserData.name, status: 'awaiting' })
+            .addFriend({ sourceUserId: data.sourceUserId, targetUserId: data.targetUserId, targetFriendName: targetUserData.name, status: 'awaiting', duelId: duelId })
             .then(() => {
                 return { result: 1 }
             })
@@ -56,7 +57,7 @@ module.exports = {
             return result
         }
         const reverseResult = await userRepo
-            .addFriend({ sourceUserId: data.targetUserId, targetUserId: data.sourceUserId, targetFriendName: sourceUserData.name, status: 'awaiting' })
+            .addFriend({ sourceUserId: data.targetUserId, targetUserId: data.sourceUserId, targetFriendName: sourceUserData.name, status: 'awaiting', duelId: duelId })
             .then(() => {
                 return { result: 1 }
             })

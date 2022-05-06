@@ -55,6 +55,7 @@ var userRepository = {
         const targetFriendId = friendRequest.targetUserId
         const targetFriendName = friendRequest.targetFriendName
         const friendRequestStatus = friendRequest.status
+        const duelId = friendRequest.duelId
         const targetFriend = await repository
             .collection("friends")
             .doc(sourceFriendId)
@@ -66,7 +67,8 @@ var userRepository = {
         if (!targetFriendData.exists) {
             await targetFriend.set({
                 name: targetFriendName,
-                status: friendRequestStatus
+                status: friendRequestStatus,
+                duelId: duelId
             })
         }
     },
