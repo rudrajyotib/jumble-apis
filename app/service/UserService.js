@@ -3,6 +3,14 @@ const challengeRepo = require('../repositories/ChallengeRepository')
 const onlineUserRepo = require('../repositories/OnlineUserRepository')
 const { v4: uuidv4 } = require('uuid')
 
+
+const listFriendsWithStatus = async function (userId, status) {
+    const friendSearchResult = await userRepo.friendsWithStatus({ sourceUserId: userId, status: status })
+        .catch(() => { return { errorCode: -1 } })
+    if (-1 === friendSearchResult.errorCode) { return { result: -1 } }
+    return { result: 1, friends: friendSearchResult.friends }
+}
+
 module.exports = {
 
     addUser: async function (data) {
@@ -56,12 +64,12 @@ module.exports = {
         return { result: 1, message: 'friend status updated' }
     },
 
-    listOfConfirmedFriends: async function (data) {
-        const userId = data.sourceUserId
-        const friendSearchResult = await userRepo.friendsWithStatus({ sourceUserId: userId, status: 'confirmed' })
-            .catch(() => { return { errorCode: -1 } })
-        if (-1 === friendSearchResult.errorCode) { return { result: -1 } }
-        return { result: 1, friends: friendSearchResult.friends }
+    listOfFriendsByStatus: async function (data) {
+        return await listFriendsWithStatus(data.sourceUserId, data.status)
+    },
+
+    listOfPendingFriends: async function (data) {
+        return await listFriendsWithStatus(data.sourceUserId, 'pending')
     },
 
     isFriend: async function (data) {
@@ -73,6 +81,5 @@ module.exports = {
             })
         return result
     }
-
-
 }
+

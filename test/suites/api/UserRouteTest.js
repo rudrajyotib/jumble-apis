@@ -226,7 +226,7 @@ describe("should do service operations", function () {
     })
 
     it("should get list of friends and return", async function () {
-        let serviceExpectation = userServiceMock.expects('listOfConfirmedFriends').once().resolves({
+        let serviceExpectation = userServiceMock.expects('listOfFriendsByStatus').once().resolves({
             result: 1,
             friends: [{ id: 1, name: 'nameOne' }, { id: 2, name: 'nameTwo' }]
         })
@@ -236,6 +236,7 @@ describe("should do service operations", function () {
         serviceExpectation.verify()
         sinon.assert.calledWith(serviceExpectation, sinon.match(function (actual) {
             assert.equal(actual.sourceUserId, 'someUserId')
+            assert.equal(actual.status, 'confirmed')
             return true
         }, "does not match"))
         assert.equal(response.status, 200)
@@ -248,7 +249,7 @@ describe("should do service operations", function () {
     })
 
     it("should report service fails to list friends gracefully", async function () {
-        let serviceExpectation = userServiceMock.expects('listOfConfirmedFriends').once()
+        let serviceExpectation = userServiceMock.expects('listOfFriendsByStatus').once()
             .resolves({
                 result: -1
             })
@@ -258,6 +259,7 @@ describe("should do service operations", function () {
         serviceExpectation.verify()
         sinon.assert.calledWith(serviceExpectation, sinon.match(function (actual) {
             assert.equal(actual.sourceUserId, 'someId')
+            assert.equal(actual.status, 'confirmed')
             return true
         }, "does not match"))
         assert.equal(response.status, 500)
@@ -266,7 +268,7 @@ describe("should do service operations", function () {
     })
 
     it("should report when no friends found", async function () {
-        let serviceExpectation = userServiceMock.expects('listOfConfirmedFriends').once()
+        let serviceExpectation = userServiceMock.expects('listOfFriendsByStatus').once()
             .resolves({
                 result: 1
             })
@@ -276,6 +278,7 @@ describe("should do service operations", function () {
         serviceExpectation.verify()
         sinon.assert.calledWith(serviceExpectation, sinon.match(function (actual) {
             assert.equal(actual.sourceUserId, 'someId')
+            assert.equal(actual.status, 'confirmed')
             return true
         }, "does not match"))
         assert.equal(response.status, 204)
@@ -284,7 +287,7 @@ describe("should do service operations", function () {
     })
 
     it("should report when service fails brute to list friends", async function () {
-        let serviceExpectation = userServiceMock.expects('listOfConfirmedFriends').once()
+        let serviceExpectation = userServiceMock.expects('listOfFriendsByStatus').once()
             .rejects({
                 error: 'mock error'
             })
@@ -294,6 +297,7 @@ describe("should do service operations", function () {
         serviceExpectation.verify()
         sinon.assert.calledWith(serviceExpectation, sinon.match(function (actual) {
             assert.equal(actual.sourceUserId, 'someId')
+            assert.equal(actual.status, 'confirmed')
             return true
         }, "does not match"))
         assert.equal(response.status, 500)

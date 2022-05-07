@@ -752,8 +752,8 @@ describe("should operate user operations", function () {
             errorCode: 1,
             friends: [{ id: 1, name: "nameOne" }, { id: 2, name: "nameTwo" }]
         })
-        const result = await userService.listOfConfirmedFriends({
-            sourceUserId: "someSourceUserId"
+        const result = await userService.listOfFriendsByStatus({
+            sourceUserId: "someSourceUserId", status: "confirmed"
         })
         userRepoFriendSearchExpectation.verify()
         sinon.assert.calledWith(userRepoFriendSearchExpectation.getCall(0), sinon.match((searchRequest) => {
@@ -774,8 +774,8 @@ describe("should operate user operations", function () {
         userRepoFriendSearchExpectation.once().resolves({
             errorCode: -1
         })
-        const result = await userService.listOfConfirmedFriends({
-            sourceUserId: "someSourceUserId"
+        const result = await userService.listOfFriendsByStatus({
+            sourceUserId: "someSourceUserId", status: "confirmed"
         })
         userRepoFriendSearchExpectation.verify()
         sinon.assert.calledWith(userRepoFriendSearchExpectation.getCall(0), sinon.match((searchRequest) => {
@@ -792,8 +792,8 @@ describe("should operate user operations", function () {
         userRepoFriendSearchExpectation.once().rejects({
             error: 'mock error'
         })
-        const result = await userService.listOfConfirmedFriends({
-            sourceUserId: "someSourceUserId"
+        const result = await userService.listOfFriendsByStatus({
+            sourceUserId: "someSourceUserId", status: "confirmed"
         })
         userRepoFriendSearchExpectation.verify()
         sinon.assert.calledWith(userRepoFriendSearchExpectation.getCall(0), sinon.match((searchRequest) => {
