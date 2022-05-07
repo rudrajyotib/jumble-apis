@@ -5,24 +5,29 @@ describe("should operate user operations", function () {
 
     let userService
     let userRepositoryMock
+    let challengeRepositoryMock
     let onlineUserRepositoryMock
     let userRepo
+    let challengeRepo
     let onlineUserRepo
 
     before(function () {
         userService = require('../../../app/service/UserService')
         userRepo = require('../../../app/repositories/UserRepository')
+        challengeRepo = require('../../../app/repositories/ChallengeRepository')
         onlineUserRepo = require('../../../app/repositories/OnlineUserRepository')
     })
 
     beforeEach(function () {
         userRepositoryMock = sinon.mock(userRepo)
+        challengeRepositoryMock = sinon.mock(challengeRepo)
         onlineUserRepositoryMock = sinon.mock(onlineUserRepo)
     })
 
     afterEach(function () {
         userRepositoryMock.restore()
         onlineUserRepositoryMock.restore()
+        challengeRepositoryMock.restore()
     })
 
     it("should successfully add user to authenticator and repository", async function () {
@@ -65,7 +70,7 @@ describe("should operate user operations", function () {
         }))
     })
 
-    it("should throw error if insertion to database failse", async function () {
+    it("should throw error if insertion to database fails", async function () {
         let userRepoExpectation = userRepositoryMock.expects('addUser').once().rejects('database error')
         let onlineAuthenticatorExpectation = onlineUserRepositoryMock.expects('createUser').once().resolves({
             uid: "someUid",
@@ -133,11 +138,13 @@ describe("should operate user operations", function () {
         let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
         let userRepoGetUserExpectation = userRepositoryMock.expects('getUser')
         let userRepoAddFriendExpectation = userRepositoryMock.expects('addFriend')
+        let addDuelExpectation = challengeRepositoryMock.expects('addDuel')
         userRepoFriendCheckExpectation.twice().resolves(false)
         userRepoGetUserExpectation.twice()
         userRepoGetUserExpectation.onCall(0).resolves({ found: true, name: 'sourceUserName' })
         userRepoGetUserExpectation.onCall(1).resolves({ found: true, name: 'targetUserName' })
         userRepoAddFriendExpectation.twice().resolves()
+        addDuelExpectation.once().resolves(true)
         const result = await userService.addFriend({
             sourceUserId: 'someSourceId',
             targetUserId: 'someTargetId'
@@ -145,6 +152,7 @@ describe("should operate user operations", function () {
         userRepoFriendCheckExpectation.verify()
         userRepoGetUserExpectation.verify()
         userRepoAddFriendExpectation.verify()
+        addDuelExpectation.verify()
         sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(0), sinon.match((friendCheckInput) => {
             assert.equal(friendCheckInput.sourceUserId, 'someSourceId')
             assert.equal(friendCheckInput.targetUserId, 'someTargetId')
@@ -174,19 +182,158 @@ describe("should operate user operations", function () {
             assert.equal(friendRequest.targetUserId, 'someSourceId')
             assert.equal(friendRequest.sourceUserId, 'someTargetId')
             assert.equal(friendRequest.targetFriendName, 'sourceUserName')
-            assert.equal(friendRequest.status, 'awaiting')
+            assert.equal(friendRequest.status, 'pending')
             assert.exists(friendRequest.duelId)
             assert.isNotEmpty(friendRequest.duelId)
+            return true
+        }))
+        sinon.assert.calledWith(addDuelExpectation.getCall(0), sinon.match((duelRequest) => {
+            assert.equal(duelRequest.targetUserId, 'someTargetId')
+            assert.equal(duelRequest.sourceUserId, 'someSourceId')
+            assert.equal(duelRequest.duelStatus, 'open')
+            assert.exists(duelRequest.duelId)
+            assert.isNotEmpty(duelRequest.duelId)
             return true
         }))
 
         assert.equal(result.result, 1)
     })
 
+    it("should negate result if duel cannot be added", async function () {
+        let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
+        let userRepoGetUserExpectation = userRepositoryMock.expects('getUser')
+        let userRepoAddFriendExpectation = userRepositoryMock.expects('addFriend')
+        let addDuelExpectation = challengeRepositoryMock.expects('addDuel')
+        userRepoFriendCheckExpectation.twice().resolves(false)
+        userRepoGetUserExpectation.twice()
+        userRepoGetUserExpectation.onCall(0).resolves({ found: true, name: 'sourceUserName' })
+        userRepoGetUserExpectation.onCall(1).resolves({ found: true, name: 'targetUserName' })
+        userRepoAddFriendExpectation.twice().resolves()
+        addDuelExpectation.once().resolves(false)
+        const result = await userService.addFriend({
+            sourceUserId: 'someSourceId',
+            targetUserId: 'someTargetId'
+        })
+        userRepoFriendCheckExpectation.verify()
+        userRepoGetUserExpectation.verify()
+        userRepoAddFriendExpectation.verify()
+        addDuelExpectation.verify()
+        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(0), sinon.match((friendCheckInput) => {
+            assert.equal(friendCheckInput.sourceUserId, 'someSourceId')
+            assert.equal(friendCheckInput.targetUserId, 'someTargetId')
+            assert.notExists(friendCheckInput.targetFriendName)
+            assert.notExists(friendCheckInput.status)
+            return true
+        }))
+        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(1), sinon.match((friendCheckInput) => {
+            assert.equal(friendCheckInput.targetUserId, 'someSourceId')
+            assert.equal(friendCheckInput.sourceUserId, 'someTargetId')
+            assert.notExists(friendCheckInput.targetFriendName)
+            assert.notExists(friendCheckInput.status)
+            return true
+        }))
+        sinon.assert.calledWith(userRepoGetUserExpectation.getCall(0), sinon.match('someSourceId'))
+        sinon.assert.calledWith(userRepoGetUserExpectation.getCall(1), sinon.match('someTargetId'))
+        sinon.assert.calledWith(userRepoAddFriendExpectation.getCall(0), sinon.match((friendRequest) => {
+            assert.equal(friendRequest.sourceUserId, 'someSourceId')
+            assert.equal(friendRequest.targetUserId, 'someTargetId')
+            assert.equal(friendRequest.targetFriendName, 'targetUserName')
+            assert.equal(friendRequest.status, 'awaiting')
+            assert.exists(friendRequest.duelId)
+            assert.isNotEmpty(friendRequest.duelId)
+            return true
+        }))
+        sinon.assert.calledWith(userRepoAddFriendExpectation.getCall(1), sinon.match((friendRequest) => {
+            assert.equal(friendRequest.targetUserId, 'someSourceId')
+            assert.equal(friendRequest.sourceUserId, 'someTargetId')
+            assert.equal(friendRequest.targetFriendName, 'sourceUserName')
+            assert.equal(friendRequest.status, 'pending')
+            assert.exists(friendRequest.duelId)
+            assert.isNotEmpty(friendRequest.duelId)
+            return true
+        }))
+        sinon.assert.calledWith(addDuelExpectation.getCall(0), sinon.match((duelRequest) => {
+            assert.equal(duelRequest.targetUserId, 'someTargetId')
+            assert.equal(duelRequest.sourceUserId, 'someSourceId')
+            assert.equal(duelRequest.duelStatus, 'open')
+            assert.exists(duelRequest.duelId)
+            assert.isNotEmpty(duelRequest.duelId)
+            return true
+        }))
+
+        assert.equal(result.result, -1)
+    })
+
+    it("should negate result if duel throws error", async function () {
+        let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
+        let userRepoGetUserExpectation = userRepositoryMock.expects('getUser')
+        let userRepoAddFriendExpectation = userRepositoryMock.expects('addFriend')
+        let addDuelExpectation = challengeRepositoryMock.expects('addDuel')
+        userRepoFriendCheckExpectation.twice().resolves(false)
+        userRepoGetUserExpectation.twice()
+        userRepoGetUserExpectation.onCall(0).resolves({ found: true, name: 'sourceUserName' })
+        userRepoGetUserExpectation.onCall(1).resolves({ found: true, name: 'targetUserName' })
+        userRepoAddFriendExpectation.twice().resolves()
+        addDuelExpectation.once().rejects({ error: 'mock error' })
+        const result = await userService.addFriend({
+            sourceUserId: 'someSourceId',
+            targetUserId: 'someTargetId'
+        })
+        userRepoFriendCheckExpectation.verify()
+        userRepoGetUserExpectation.verify()
+        userRepoAddFriendExpectation.verify()
+        addDuelExpectation.verify()
+        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(0), sinon.match((friendCheckInput) => {
+            assert.equal(friendCheckInput.sourceUserId, 'someSourceId')
+            assert.equal(friendCheckInput.targetUserId, 'someTargetId')
+            assert.notExists(friendCheckInput.targetFriendName)
+            assert.notExists(friendCheckInput.status)
+            return true
+        }))
+        sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(1), sinon.match((friendCheckInput) => {
+            assert.equal(friendCheckInput.targetUserId, 'someSourceId')
+            assert.equal(friendCheckInput.sourceUserId, 'someTargetId')
+            assert.notExists(friendCheckInput.targetFriendName)
+            assert.notExists(friendCheckInput.status)
+            return true
+        }))
+        sinon.assert.calledWith(userRepoGetUserExpectation.getCall(0), sinon.match('someSourceId'))
+        sinon.assert.calledWith(userRepoGetUserExpectation.getCall(1), sinon.match('someTargetId'))
+        sinon.assert.calledWith(userRepoAddFriendExpectation.getCall(0), sinon.match((friendRequest) => {
+            assert.equal(friendRequest.sourceUserId, 'someSourceId')
+            assert.equal(friendRequest.targetUserId, 'someTargetId')
+            assert.equal(friendRequest.targetFriendName, 'targetUserName')
+            assert.equal(friendRequest.status, 'awaiting')
+            assert.exists(friendRequest.duelId)
+            assert.isNotEmpty(friendRequest.duelId)
+            return true
+        }))
+        sinon.assert.calledWith(userRepoAddFriendExpectation.getCall(1), sinon.match((friendRequest) => {
+            assert.equal(friendRequest.targetUserId, 'someSourceId')
+            assert.equal(friendRequest.sourceUserId, 'someTargetId')
+            assert.equal(friendRequest.targetFriendName, 'sourceUserName')
+            assert.equal(friendRequest.status, 'pending')
+            assert.exists(friendRequest.duelId)
+            assert.isNotEmpty(friendRequest.duelId)
+            return true
+        }))
+        sinon.assert.calledWith(addDuelExpectation.getCall(0), sinon.match((duelRequest) => {
+            assert.equal(duelRequest.targetUserId, 'someTargetId')
+            assert.equal(duelRequest.sourceUserId, 'someSourceId')
+            assert.equal(duelRequest.duelStatus, 'open')
+            assert.exists(duelRequest.duelId)
+            assert.isNotEmpty(duelRequest.duelId)
+            return true
+        }))
+
+        assert.equal(result.result, -1)
+    })
+
     it("should not add users if reverse friend add fails", async function () {
         let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
         let userRepoGetUserExpectation = userRepositoryMock.expects('getUser')
         let userRepoAddFriendExpectation = userRepositoryMock.expects('addFriend')
+        let addDuelExpectation = challengeRepositoryMock.expects('addDuel')
         userRepoFriendCheckExpectation.twice().resolves(false)
         userRepoGetUserExpectation.twice()
         userRepoGetUserExpectation.onCall(0).resolves({ found: true, name: 'sourceUserName' })
@@ -194,6 +341,7 @@ describe("should operate user operations", function () {
         userRepoAddFriendExpectation.twice()
         userRepoAddFriendExpectation.onCall(0).resolves()
         userRepoAddFriendExpectation.onCall(1).rejects({ error: 'some error' })
+        addDuelExpectation.never()
         const result = await userService.addFriend({
             sourceUserId: 'someSourceId',
             targetUserId: 'someTargetId'
@@ -201,6 +349,7 @@ describe("should operate user operations", function () {
         userRepoFriendCheckExpectation.verify()
         userRepoGetUserExpectation.verify()
         userRepoAddFriendExpectation.verify()
+        addDuelExpectation.verify()
         sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(0), sinon.match((friendCheckInput) => {
             assert.equal(friendCheckInput.sourceUserId, 'someSourceId')
             assert.equal(friendCheckInput.targetUserId, 'someTargetId')
@@ -230,7 +379,7 @@ describe("should operate user operations", function () {
             assert.equal(friendRequest.targetUserId, 'someSourceId')
             assert.equal(friendRequest.sourceUserId, 'someTargetId')
             assert.equal(friendRequest.targetFriendName, 'sourceUserName')
-            assert.equal(friendRequest.status, 'awaiting')
+            assert.equal(friendRequest.status, 'pending')
             assert.exists(friendRequest.duelId)
             assert.isNotEmpty(friendRequest.duelId)
             return true
@@ -243,9 +392,11 @@ describe("should operate user operations", function () {
         let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
         let userRepoGetUserExpectation = userRepositoryMock.expects('getUser')
         let userRepoAddFriendExpectation = userRepositoryMock.expects('addFriend')
+        let addDuelExpectation = challengeRepositoryMock.expects('addDuel')
         userRepoFriendCheckExpectation.once().resolves(true)
         userRepoGetUserExpectation.never()
         userRepoAddFriendExpectation.never()
+        addDuelExpectation.never()
         const result = await userService.addFriend({
             sourceUserId: 'someSourceId',
             targetUserId: 'someTargetId'
@@ -253,6 +404,7 @@ describe("should operate user operations", function () {
         userRepoFriendCheckExpectation.verify()
         userRepoGetUserExpectation.verify()
         userRepoAddFriendExpectation.verify()
+        addDuelExpectation.verify()
         sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(0), sinon.match((friendRequest) => {
             assert.equal(friendRequest.sourceUserId, 'someSourceId')
             assert.equal(friendRequest.targetUserId, 'someTargetId')
@@ -267,11 +419,13 @@ describe("should operate user operations", function () {
         let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
         let userRepoGetUserExpectation = userRepositoryMock.expects('getUser')
         let userRepoAddFriendExpectation = userRepositoryMock.expects('addFriend')
+        let addDuelExpectation = challengeRepositoryMock.expects('addDuel')
         userRepoFriendCheckExpectation.twice()
         userRepoFriendCheckExpectation.onCall(0).resolves(false)
         userRepoFriendCheckExpectation.onCall(1).resolves(true)
         userRepoGetUserExpectation.never()
         userRepoAddFriendExpectation.never()
+        addDuelExpectation.never()
         const result = await userService.addFriend({
             sourceUserId: 'someSourceId',
             targetUserId: 'someTargetId'
@@ -279,6 +433,7 @@ describe("should operate user operations", function () {
         userRepoFriendCheckExpectation.verify()
         userRepoGetUserExpectation.verify()
         userRepoAddFriendExpectation.verify()
+        addDuelExpectation.verify()
         sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(0), sinon.match((friendRequest) => {
             assert.equal(friendRequest.sourceUserId, 'someSourceId')
             assert.equal(friendRequest.targetUserId, 'someTargetId')
@@ -300,10 +455,12 @@ describe("should operate user operations", function () {
         let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
         let userRepoGetUserExpectation = userRepositoryMock.expects('getUser')
         let userRepoAddFriendExpectation = userRepositoryMock.expects('addFriend')
+        let addDuelExpectation = challengeRepositoryMock.expects('addDuel')
         userRepoFriendCheckExpectation.twice().resolves(false)
         userRepoGetUserExpectation.once()
         userRepoGetUserExpectation.onCall(0).resolves({ found: false })
         userRepoAddFriendExpectation.never()
+        addDuelExpectation.never()
         const result = await userService.addFriend({
             sourceUserId: 'someSourceId',
             targetUserId: 'someTargetId'
@@ -311,6 +468,7 @@ describe("should operate user operations", function () {
         userRepoFriendCheckExpectation.verify()
         userRepoGetUserExpectation.verify()
         userRepoAddFriendExpectation.verify()
+        addDuelExpectation.verify()
         sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(0), sinon.match((friendCheckInput) => {
             assert.equal(friendCheckInput.sourceUserId, 'someSourceId')
             assert.equal(friendCheckInput.targetUserId, 'someTargetId')
@@ -333,11 +491,13 @@ describe("should operate user operations", function () {
         let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
         let userRepoGetUserExpectation = userRepositoryMock.expects('getUser')
         let userRepoAddFriendExpectation = userRepositoryMock.expects('addFriend')
+        let addDuelExpectation = challengeRepositoryMock.expects('addDuel')
         userRepoFriendCheckExpectation.twice().resolves(false)
         userRepoGetUserExpectation.twice()
         userRepoGetUserExpectation.onCall(0).resolves({ found: true, name: 'sourceUserName' })
         userRepoGetUserExpectation.onCall(1).resolves({ found: false })
         userRepoAddFriendExpectation.never()
+        addDuelExpectation.never()
         const result = await userService.addFriend({
             sourceUserId: 'someSourceId',
             targetUserId: 'someTargetId'
@@ -345,6 +505,7 @@ describe("should operate user operations", function () {
         userRepoFriendCheckExpectation.verify()
         userRepoGetUserExpectation.verify()
         userRepoAddFriendExpectation.verify()
+        addDuelExpectation.verify()
         sinon.assert.calledWith(userRepoFriendCheckExpectation.getCall(0), sinon.match((friendCheckInput) => {
             assert.equal(friendCheckInput.sourceUserId, 'someSourceId')
             assert.equal(friendCheckInput.targetUserId, 'someTargetId')
@@ -363,15 +524,17 @@ describe("should operate user operations", function () {
         assert.equal(result.result, 0)
     })
 
-    it("should report if repository fails to handle errors", async function () {
+    it("should report if repository fails to handle errors while adding friends", async function () {
         let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
         let userRepoGetUserExpectation = userRepositoryMock.expects('getUser')
         let userRepoAddFriendExpectation = userRepositoryMock.expects('addFriend')
+        let addDuelExpectation = challengeRepositoryMock.expects('addDuel')
         userRepoFriendCheckExpectation.twice().resolves(false)
         userRepoGetUserExpectation.twice()
         userRepoGetUserExpectation.onCall(0).resolves({ found: true, name: 'sourceUserName' })
         userRepoGetUserExpectation.onCall(1).resolves({ found: true, name: 'targetUserName' })
         userRepoAddFriendExpectation.once().rejects({ error: "mock error" })
+        addDuelExpectation.never()
         const result = await userService.addFriend({
             sourceUserId: 'someSourceId',
             targetUserId: 'someTargetId'
@@ -379,6 +542,7 @@ describe("should operate user operations", function () {
         userRepoFriendCheckExpectation.verify()
         userRepoGetUserExpectation.verify()
         userRepoAddFriendExpectation.verify()
+        addDuelExpectation.verify()
         sinon.assert.calledWith(userRepoGetUserExpectation.getCall(0), sinon.match('someSourceId'))
         sinon.assert.calledWith(userRepoGetUserExpectation.getCall(1), sinon.match('someTargetId'))
         sinon.assert.calledWith(userRepoAddFriendExpectation.getCall(0), sinon.match((friendRequest) => {
