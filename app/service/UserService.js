@@ -68,10 +68,6 @@ module.exports = {
         return await listFriendsWithStatus(data.sourceUserId, data.status)
     },
 
-    // listOfPendingFriends: async function (data) {
-    //     return await listFriendsWithStatus(data.sourceUserId, 'pending')
-    // },
-
     isFriend: async function (data) {
         const result = await userRepo.isFriend({ sourceUserId: data.sourceUserId, targetUserId: data.targetUserId })
             .then((result) => { return result })
