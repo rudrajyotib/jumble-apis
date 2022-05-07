@@ -7,6 +7,7 @@ loginRouter.get("/isfriend", userController.isFriend)
 loginRouter.post("/signup", userController.signUp)
 loginRouter.post("/confirmfriend", userController.confirmFriend)
 loginRouter.get("/friends/:userId", userController.listFriends)
+loginRouter.get("/pendingfriends/:userId", userController.listPendingFriendRequests)
 
 
 module.exports = loginRouter

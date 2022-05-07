@@ -50,15 +50,24 @@ const signUp = async function (request, response, next) {
 }
 
 const listFriends = async function (request, response, next) {
+    await searchFriendsByStatus(request, response, 'confirmed')
+}
+
+const listPendingFriendRequests = async function (request, response, next) {
+    await searchFriendsByStatus(request, response, 'pending')
+}
+
+
+module.exports = { signUp, addFriend, isFriend, confirmFriend, listFriends, listPendingFriendRequests }
+
+async function searchFriendsByStatus(request, response, status) {
     const userId = request.params.userId
     await userService
-        .listOfFriendsByStatus({ sourceUserId: userId, status: 'confirmed' })
+        .listOfFriendsByStatus({ sourceUserId: userId, status: status })
         .then((result) => {
             if (1 === result.result) {
-                if (result.friends && result.friends.length > 1) { response.status(200).send(result.friends) }
+                if (result.friends && result.friends.length > 0) { response.status(200).send(result.friends) }
                 else { response.status(204).send() }
             } else { response.status(500).send('no result') }
         }).catch((error) => { response.status(500).send('no result') })
 }
-
-module.exports = { signUp, addFriend, isFriend, confirmFriend, listFriends }

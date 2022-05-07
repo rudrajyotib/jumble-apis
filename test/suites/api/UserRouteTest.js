@@ -225,7 +225,7 @@ describe("should do service operations", function () {
         assert.equal(response.text, "update failed")
     })
 
-    it("should get list of friends and return", async function () {
+    it("should get list of confirmed friends and return", async function () {
         let serviceExpectation = userServiceMock.expects('listOfFriendsByStatus').once().resolves({
             result: 1,
             friends: [{ id: 1, name: 'nameOne' }, { id: 2, name: 'nameTwo' }]
@@ -248,7 +248,7 @@ describe("should do service operations", function () {
         assert.equal(response.body[1].name, 'nameTwo')
     })
 
-    it("should report service fails to list friends gracefully", async function () {
+    it("should report service fails to list confirmed friends gracefully", async function () {
         let serviceExpectation = userServiceMock.expects('listOfFriendsByStatus').once()
             .resolves({
                 result: -1
@@ -267,7 +267,7 @@ describe("should do service operations", function () {
         chai.expect(response.body).to.be.empty
     })
 
-    it("should report when no friends found", async function () {
+    it("should report when no confirmed friends found", async function () {
         let serviceExpectation = userServiceMock.expects('listOfFriendsByStatus').once()
             .resolves({
                 result: 1
@@ -286,7 +286,7 @@ describe("should do service operations", function () {
         chai.expect(response.body).to.be.empty
     })
 
-    it("should report when service fails brute to list friends", async function () {
+    it("should report when service fails brute to list confirmed friends", async function () {
         let serviceExpectation = userServiceMock.expects('listOfFriendsByStatus').once()
             .rejects({
                 error: 'mock error'
@@ -298,6 +298,86 @@ describe("should do service operations", function () {
         sinon.assert.calledWith(serviceExpectation, sinon.match(function (actual) {
             assert.equal(actual.sourceUserId, 'someId')
             assert.equal(actual.status, 'confirmed')
+            return true
+        }, "does not match"))
+        assert.equal(response.status, 500)
+        assert.exists(response.body)
+        assert.equal(response.text, 'no result')
+    })
+
+    it("should get list of pending friends and return", async function () {
+        let serviceExpectation = userServiceMock.expects('listOfFriendsByStatus').once().resolves({
+            result: 1,
+            friends: [{ id: 1, name: 'nameOne' }, { id: 2, name: 'nameTwo' }]
+        })
+        const response = await request("http://localhost:3000")
+            .get("/user/pendingfriends/someUserId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation, sinon.match(function (actual) {
+            assert.equal(actual.sourceUserId, 'someUserId')
+            assert.equal(actual.status, 'pending')
+            return true
+        }, "does not match"))
+        assert.equal(response.status, 200)
+        assert.exists(response.body)
+        assert.equal(response.body.length, 2)
+        assert.equal(response.body[0].id, 1)
+        assert.equal(response.body[1].id, 2)
+        assert.equal(response.body[0].name, 'nameOne')
+        assert.equal(response.body[1].name, 'nameTwo')
+    })
+
+    it("should report service fails to list pending friends gracefully", async function () {
+        let serviceExpectation = userServiceMock.expects('listOfFriendsByStatus').once()
+            .resolves({
+                result: -1
+            })
+        const response = await request("http://localhost:3000")
+            .get("/user/pendingfriends/someId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation, sinon.match(function (actual) {
+            assert.equal(actual.sourceUserId, 'someId')
+            assert.equal(actual.status, 'pending')
+            return true
+        }, "does not match"))
+        assert.equal(response.status, 500)
+        assert.exists(response.body)
+        chai.expect(response.body).to.be.empty
+    })
+
+    it("should report when no pending friends found", async function () {
+        let serviceExpectation = userServiceMock.expects('listOfFriendsByStatus').once()
+            .resolves({
+                result: 1
+            })
+        const response = await request("http://localhost:3000")
+            .get("/user/pendingfriends/someId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation, sinon.match(function (actual) {
+            assert.equal(actual.sourceUserId, 'someId')
+            assert.equal(actual.status, 'pending')
+            return true
+        }, "does not match"))
+        assert.equal(response.status, 204)
+        assert.exists(response.body)
+        chai.expect(response.body).to.be.empty
+    })
+
+    it("should report when service fails brute to list pending friends", async function () {
+        let serviceExpectation = userServiceMock.expects('listOfFriendsByStatus').once()
+            .rejects({
+                error: 'mock error'
+            })
+        const response = await request("http://localhost:3000")
+            .get("/user/pendingfriends/someId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation, sinon.match(function (actual) {
+            assert.equal(actual.sourceUserId, 'someId')
+            assert.equal(actual.status, 'pending')
             return true
         }, "does not match"))
         assert.equal(response.status, 500)
