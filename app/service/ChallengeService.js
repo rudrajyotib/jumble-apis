@@ -12,6 +12,11 @@ const challengeService = {
         } catch (err) {
             throw new Error('Challenege could not be created')
         }
+    },
+
+    getDuelData: async function (duelId) {
+        duelData = await challengeRepo.getDuel(duelId).catch(() => { return { found: false } })
+        return duelData
     }
 }
 

@@ -129,4 +129,43 @@ describe("should execute all challenge repository tests", function () {
 
     })
 
+    it("should get details of a duel", async function () {
+        const getDuelExpectation = documentDataMock.expects('get')
+        getDuelExpectation.once().resolves({
+            exists: true,
+            data: function () { return { sourceUserId: 'someSourceId', targetUserId: 'someTargetId', duelStatus: 'open', score: { someTargetId: 1, someSourceId: 2 } } }
+        })
+        const duelDataResponse = await challengeRepo.getDuel('someDuelId')
+        getDuelExpectation.verify()
+        assert(firestoreSpy.calledOnce)
+        assert(firestoreCollectionSpy.calledOnce)
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someDuelId')
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'duel')
+        assert.isTrue(duelDataResponse.found)
+        const duelData = duelDataResponse.data
+        assert.equal(duelData.sourceUserId, 'someSourceId')
+        assert.equal(duelData.targetUserId, 'someTargetId')
+        assert.equal(duelData.status, 'open')
+        sinon.assert.match(duelData, sinon.match((duel) => {
+            assert.exists(duel.score)
+            assert.equal(duel.score['someSourceId'], 2)
+            assert.equal(duel.score['someTargetId'], 1)
+            assert.notExists(duel.challengeId)
+            return true
+        }))
+    })
+
+    it("should handle absence of duel gracefully when duel is searched", async function () {
+        const getDuelExpectation = documentDataMock.expects('get')
+        getDuelExpectation.once().resolves({ exists: false })
+        const duelData = await challengeRepo.getDuel('someDuelId')
+        getDuelExpectation.verify()
+        assert(firestoreSpy.calledOnce)
+        assert(firestoreCollectionSpy.calledOnce)
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someDuelId')
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'duel')
+        assert.isFalse(duelData.found)
+        assert.notExists(duelData.data)
+    })
+
 })

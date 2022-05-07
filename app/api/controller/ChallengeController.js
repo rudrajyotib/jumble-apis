@@ -22,4 +22,13 @@ const addChallenge = async (req, res, next) => {
     }
 }
 
-module.exports = { addChallenge }
+const getDuelData = async (req, res, next) => {
+    const duelData = await challengeService.getDuelData(req.params.duelId).catch(() => { return { found: false } })
+    if (!duelData.found) {
+        res.status(204).send()
+    } else {
+        res.status(200).send(duelData.data)
+    }
+}
+
+module.exports = { addChallenge, getDuelData }
