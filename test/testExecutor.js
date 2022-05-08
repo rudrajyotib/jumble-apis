@@ -31,7 +31,7 @@ describe("Should execute all APIs", function () {
         require('./suites/repository/OnlineUserRepositoryTest')
         require('./suites/service/ChallengeServiceTest')
         require('./suites/service/UserServiceTest')
-        require('./suites/api/ChallengeRoute')
+        require('./suites/api/ChallengeRouteTest')
         require('./suites/api/LoginRoute')
         require('./suites/api/util/UserApiUtilTest')
         require('./suites/config/ConfigurationTest')

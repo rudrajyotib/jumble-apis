@@ -9,14 +9,12 @@ const addChallenge = async (req, res, next) => {
         inputObject.targetUser = body.targetUser
         inputObject.challengeDate = body.challengeDate
         inputObject.question = body.question
+        inputObject.duelId = req.params.duelId
+        inputObject.duelEvent = 'challenge'
         await challengeService
-            .addChallenge(inputObject)
-            .then(challengeId => {
-                res.status(200).send(challengeId)
-            })
-            .catch(() => {
-                res.status(500).send('Could not complete add challenge request due to a backend error')
-            })
+            .updateDuelData(inputObject)
+            .then((result) => { if (result) { res.status(204).send() } else { res.status(400).send() } })
+            .catch(() => { res.status(500).send() })
     } else {
         res.status(400).send("valid challenge data not found")
     }

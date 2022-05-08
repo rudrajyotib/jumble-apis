@@ -22,37 +22,71 @@ describe("should do service operations", function () {
         challengeServiceMock.restore()
     })
 
-    it("should add challenge", async function () {
-        let expectation = challengeServiceMock.expects('addChallenge').once().resolves('someId')
+    it("addChallenge:should add challenge", async function () {
+        let expectation = challengeServiceMock.expects('updateDuelData').once().resolves('someId')
         const response = await request("http://localhost:3000")
-            .post("/challenge/")
+            .post("/challenge/addChallenge/someDuelId")
             .send({ requestedBy: 'a7038', targetUser: 'a001', challengeDate: 'x-y-z', question: { type: 'jumble' } })
             .set('Accept', 'application/json')
 
         expectation.verify()
         sinon.assert.calledWith(expectation, sinon.match(function (actual) {
             assert.equal(actual.challenger, 'a7038')
+            assert.equal(actual.targetUser, 'a001')
+            assert.equal(actual.challengeDate, 'x-y-z')
+            assert.equal(actual.question.type, 'jumble')
+            assert.equal(actual.duelId, 'someDuelId')
+            assert.equal(actual.duelEvent, 'challenge')
             return true
         }, "does not match"))
-        assert.equal(response.status, 200)
-        assert.equal(response.text, "someId")
+        assert.equal(response.status, 204)
     })
 
-    it("should report internal server error when challenge persist fails", async function () {
-        let expectation = challengeServiceMock.expects('addChallenge').once().rejects('Service layer failure')
+    it("addChallenge:should handle add challenge when service fails gracefully", async function () {
+        let expectation = challengeServiceMock.expects('updateDuelData').once().resolves(false)
         const response = await request("http://localhost:3000")
-            .post("/challenge/")
-            .send({ requestedBy: 'a7038', targetUser: 'a001' })
+            .post("/challenge/addChallenge/someDuelId")
+            .send({ requestedBy: 'a7038', targetUser: 'a001', challengeDate: 'x-y-z', question: { type: 'jumble' } })
             .set('Accept', 'application/json')
 
         expectation.verify()
-        assert.equal(response.status, 500)
-        assert.equal(response.text, "Could not complete add challenge request due to a backend error")
+        sinon.assert.calledWith(expectation, sinon.match(function (actual) {
+            assert.equal(actual.challenger, 'a7038')
+            assert.equal(actual.targetUser, 'a001')
+            assert.equal(actual.challengeDate, 'x-y-z')
+            assert.equal(actual.question.type, 'jumble')
+            assert.equal(actual.duelId, 'someDuelId')
+            assert.equal(actual.duelEvent, 'challenge')
+            return true
+        }, "does not match"))
+        assert.equal(response.status, 400)
     })
 
-    it("should report invalid data when challenge data does not validate", async function () {
+    it("addChallenge:should report internal server error when challenge persist fails", async function () {
+        let expectation = challengeServiceMock.expects('updateDuelData').once().rejects('Service layer failure')
         const response = await request("http://localhost:3000")
-            .post("/challenge/")
+            .post("/challenge/addChallenge/someDuelId")
+            .send({ requestedBy: 'a7038', targetUser: 'a001', challengeDate: 'x-y-z', question: { type: 'jumble' } })
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation, sinon.match(function (actual) {
+            assert.equal(actual.challenger, 'a7038')
+            assert.equal(actual.targetUser, 'a001')
+            assert.equal(actual.challengeDate, 'x-y-z')
+            assert.equal(actual.question.type, 'jumble')
+            assert.equal(actual.duelId, 'someDuelId')
+            assert.equal(actual.duelEvent, 'challenge')
+            return true
+        }, "does not match"))
+        assert.equal(response.status, 500)
+        assert.isEmpty(response.text)
+    })
+
+    it("addChallenge:should report invalid data when challenge data does not validate", async function () {
+        let expectation = challengeServiceMock.expects('updateDuelData').never()
+        const response = await request("http://localhost:3000")
+            .post("/challenge/addChallenge/someDuelId")
             .send({ world: 'beautiful' })
             .set('Accept', 'application/json')
 
@@ -60,7 +94,7 @@ describe("should do service operations", function () {
         assert.equal(response.text, "valid challenge data not found")
     })
 
-    it('/duel/:duelId - should return the duel data', async function () {
+    it('getDuelData: /duel/:duelId - should return the duel data', async function () {
         let expectation = challengeServiceMock.expects('getDuelData').once().resolves({
             found: true,
             data: { sourceUserId: 'someSourceId', targetUserId: 'someTargetId', status: 'open', challengeId: 'someChallengeId', score: { someSourceId: 1, someTargetId: 2 } }
@@ -87,7 +121,7 @@ describe("should do service operations", function () {
         }))
     })
 
-    it('/duel/:duelId - should return no content when duel data does not exist', async function () {
+    it('getDuelData: /duel/:duelId - should return no content when duel data does not exist', async function () {
         let expectation = challengeServiceMock.expects('getDuelData').once().resolves({ found: false })
         const response = await request("http://localhost:3000")
             .get("/challenge/duel/someDuelId")
@@ -101,7 +135,7 @@ describe("should do service operations", function () {
         assert.isEmpty(duelData)
     })
 
-    it('/duel/:duelId - should return no content when service layer fails brutally', async function () {
+    it('getDuelData: /duel/:duelId - should return no content when service layer fails brutally', async function () {
         let expectation = challengeServiceMock.expects('getDuelData').once().rejects({ error: 'mockError' })
         const response = await request("http://localhost:3000")
             .get("/challenge/duel/someDuelId")
