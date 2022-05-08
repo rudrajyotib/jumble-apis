@@ -23,7 +23,7 @@ describe("should do service operations", function () {
     })
 
     it("addChallenge:should add challenge", async function () {
-        let expectation = challengeServiceMock.expects('updateDuelData').once().resolves('someId')
+        let expectation = challengeServiceMock.expects('updateDuelData').once().resolves(true)
         const response = await request("http://localhost:3000")
             .post("/challenge/addChallenge/someDuelId")
             .send({ requestedBy: 'a7038', targetUser: 'a001', challengeDate: 'x-y-z', question: { type: 'jumble' } })
