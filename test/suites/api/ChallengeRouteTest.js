@@ -149,5 +149,167 @@ describe("should do service operations", function () {
         assert.isEmpty(duelData)
     })
 
+    it('attemptChallenge: /attemptChallenge/:duelId - should update to attempt duel', async function () {
+        let expectation = challengeServiceMock.expects('updateDuelData').once().resolves(true)
+        const response = await request("http://localhost:3000")
+            .post("/challenge/attempt/someDuelId")
+            .send()
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation, sinon.match((duelData) => {
+            assert.equal('someDuelId', duelData.duelId)
+            assert.equal('attempt', duelData.duelEvent)
+            return true
+        }))
+        assert.equal(response.status, 204)
+        const duelData = response.body
+        assert.isEmpty(duelData)
+    })
+
+    it('attemptChallenge: /attemptChallenge/:duelId - should return graceful failure of service', async function () {
+        let expectation = challengeServiceMock.expects('updateDuelData').once().resolves(false)
+        const response = await request("http://localhost:3000")
+            .post("/challenge/attempt/someDuelId")
+            .send()
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation, sinon.match((duelData) => {
+            assert.equal('someDuelId', duelData.duelId)
+            assert.equal('attempt', duelData.duelEvent)
+            return true
+        }))
+        assert.equal(response.status, 400)
+        const duelData = response.body
+        assert.isEmpty(duelData)
+    })
+
+    it('attemptChallenge: /attemptChallenge/:duelId - should return runtime failure of service', async function () {
+        let expectation = challengeServiceMock.expects('updateDuelData').once().rejects({ error: 'mock error' })
+        const response = await request("http://localhost:3000")
+            .post("/challenge/attempt/someDuelId")
+            .send()
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation, sinon.match((duelData) => {
+            assert.equal('someDuelId', duelData.duelId)
+            assert.equal('attempt', duelData.duelEvent)
+            return true
+        }))
+        assert.equal(response.status, 400)
+        const duelData = response.body
+        assert.isEmpty(duelData)
+    })
+
+    it('attemptChallenge: /attemptChallenge/:duelId - should update to mark duel success', async function () {
+        let expectation = challengeServiceMock.expects('updateDuelData').once().resolves(true)
+        const response = await request("http://localhost:3000")
+            .post("/challenge/success/someDuelId")
+            .send()
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation, sinon.match((duelData) => {
+            assert.equal('someDuelId', duelData.duelId)
+            assert.equal('success', duelData.duelEvent)
+            return true
+        }))
+        assert.equal(response.status, 204)
+        const duelData = response.body
+        assert.isEmpty(duelData)
+    })
+
+    it('attemptChallenge: /attemptChallenge/:duelId - should update to mark duel success', async function () {
+        let expectation = challengeServiceMock.expects('updateDuelData').once().resolves(false)
+        const response = await request("http://localhost:3000")
+            .post("/challenge/success/someDuelId")
+            .send()
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation, sinon.match((duelData) => {
+            assert.equal('someDuelId', duelData.duelId)
+            assert.equal('success', duelData.duelEvent)
+            return true
+        }))
+        assert.equal(response.status, 400)
+        const duelData = response.body
+        assert.isEmpty(duelData)
+    })
+
+    it('attemptChallenge: /attemptChallenge/:duelId - should update to mark duel success', async function () {
+        let expectation = challengeServiceMock.expects('updateDuelData').once().rejects({ error: 'mock error' })
+        const response = await request("http://localhost:3000")
+            .post("/challenge/success/someDuelId")
+            .send()
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation, sinon.match((duelData) => {
+            assert.equal('someDuelId', duelData.duelId)
+            assert.equal('success', duelData.duelEvent)
+            return true
+        }))
+        assert.equal(response.status, 400)
+        const duelData = response.body
+        assert.isEmpty(duelData)
+    })
+
+    it('attemptChallenge: /attemptChallenge/:duelId - should update to mark duel failure', async function () {
+        let expectation = challengeServiceMock.expects('updateDuelData').once().resolves(true)
+        const response = await request("http://localhost:3000")
+            .post("/challenge/failure/someDuelId")
+            .send()
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation, sinon.match((duelData) => {
+            assert.equal('someDuelId', duelData.duelId)
+            assert.equal('failure', duelData.duelEvent)
+            return true
+        }))
+        assert.equal(response.status, 204)
+        const duelData = response.body
+        assert.isEmpty(duelData)
+    })
+
+    it('attemptChallenge: /attemptChallenge/:duelId - should update to mark duel failure', async function () {
+        let expectation = challengeServiceMock.expects('updateDuelData').once().resolves(false)
+        const response = await request("http://localhost:3000")
+            .post("/challenge/failure/someDuelId")
+            .send()
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation, sinon.match((duelData) => {
+            assert.equal('someDuelId', duelData.duelId)
+            assert.equal('failure', duelData.duelEvent)
+            return true
+        }))
+        assert.equal(response.status, 400)
+        const duelData = response.body
+        assert.isEmpty(duelData)
+    })
+
+    it('attemptChallenge: /attemptChallenge/:duelId - should update to mark duel failure', async function () {
+        let expectation = challengeServiceMock.expects('updateDuelData').once().rejects({ error: 'mock error' })
+        const response = await request("http://localhost:3000")
+            .post("/challenge/failure/someDuelId")
+            .send()
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation, sinon.match((duelData) => {
+            assert.equal('someDuelId', duelData.duelId)
+            assert.equal('failure', duelData.duelEvent)
+            return true
+        }))
+        assert.equal(response.status, 400)
+        const duelData = response.body
+        assert.isEmpty(duelData)
+    })
+
 
 })
