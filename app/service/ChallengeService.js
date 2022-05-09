@@ -14,6 +14,12 @@ const challengeService = {
         }
     },
 
+    getChallengeData: async function (challengeId) {
+        const challengeData = await challengeRepo.getChallenge(challengeId).catch(() => { return { found: false } })
+        if (true != challengeData.found || !challengeData.data) { return { found: false } }
+        return challengeData
+    },
+
     getDuelData: async function (duelId) {
         duelData = await challengeRepo.getDuel(duelId).catch(() => { return { found: false } })
         return duelData

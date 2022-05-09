@@ -257,4 +257,44 @@ describe("challenge service test suite", function () {
         duelUpdateExpectation.verify()
         addChallenegeExpectation.verify()
     })
+
+    it("getChallengeData: should get challenge data from repo", async function () {
+        let addChallenegeExpectation = challengeRepositoryMock.expects('getChallenge')
+        addChallenegeExpectation.once().resolves({ found: true, data: { question: 'someQuestion' } })
+        const challengeData = await challengeService.getChallengeData('someChallengeId')
+        assert.isTrue(challengeData.found)
+        assert.equal(challengeData.data.question, "someQuestion")
+        addChallenegeExpectation.verify()
+        sinon.assert.calledWith(addChallenegeExpectation.getCall(0), sinon.match("someChallengeId"))
+    })
+
+    it("getChallengeData: should report if challenge is found in repo without any data", async function () {
+        let addChallenegeExpectation = challengeRepositoryMock.expects('getChallenge')
+        addChallenegeExpectation.once().resolves({ found: true })
+        const challengeData = await challengeService.getChallengeData('someChallengeId')
+        assert.isFalse(challengeData.found)
+        assert.notExists(challengeData.data)
+        addChallenegeExpectation.verify()
+        sinon.assert.calledWith(addChallenegeExpectation.getCall(0), sinon.match("someChallengeId"))
+    })
+
+    it("getChallengeData: should report if challenge is not found in repo", async function () {
+        let addChallenegeExpectation = challengeRepositoryMock.expects('getChallenge')
+        addChallenegeExpectation.once().resolves({ found: false })
+        const challengeData = await challengeService.getChallengeData('someChallengeId')
+        assert.isFalse(challengeData.found)
+        assert.notExists(challengeData.data)
+        addChallenegeExpectation.verify()
+        sinon.assert.calledWith(addChallenegeExpectation.getCall(0), sinon.match("someChallengeId"))
+    })
+
+    it("getChallengeData: should report if challenge repo rejects promise", async function () {
+        let addChallenegeExpectation = challengeRepositoryMock.expects('getChallenge')
+        addChallenegeExpectation.once().rejects({ error: "mock error" })
+        const challengeData = await challengeService.getChallengeData('someChallengeId')
+        assert.isFalse(challengeData.found)
+        assert.notExists(challengeData.data)
+        addChallenegeExpectation.verify()
+        sinon.assert.calledWith(addChallenegeExpectation.getCall(0), sinon.match("someChallengeId"))
+    })
 })

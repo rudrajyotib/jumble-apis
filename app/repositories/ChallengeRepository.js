@@ -70,6 +70,15 @@ var challengeRepository = {
             { return { found: true, data: { status: duel.duelStatus, sourceUserId: duel.sourceUserId, targetUserId: duel.targetUserId, challengeId: duel.challengeId, score: duel.score } } }
         }
         return { found: false }
+    },
+
+    getChallenge: async function (challengeId) {
+        let challengeDoc = await repository.collection("challenges").doc(challengeId).get().catch(() => { return { exists: false } })
+        if (challengeDoc.exists) {
+            const challengeData = challengeDoc.data()
+            { return { found: true, data: { type: challengeData.questionType, question: challengeData.question } } }
+        }
+        return { found: false }
     }
 
 }

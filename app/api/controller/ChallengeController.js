@@ -29,6 +29,15 @@ const getDuelData = async (req, res, next) => {
     }
 }
 
+const getChallengeData = async (req, res, next) => {
+    const duelData = await challengeService.getChallengeData(req.params.challengeId).catch(() => { return { found: false } })
+    if (duelData.found != true || !duelData.data) {
+        res.status(400).send()
+    } else {
+        res.status(200).send(duelData.data)
+    }
+}
+
 const attemptChallenge = async (req, res, next) => {
     const duelUpdateResult = await updateDuelStatus(req.params.duelId, 'attempt')
     if (true === duelUpdateResult) {
@@ -61,4 +70,4 @@ const updateDuelStatus = async (duelId, state) => {
     return await challengeService.updateDuelData(duelUpdateInput).catch(() => { return false })
 }
 
-module.exports = { addChallenge, getDuelData, attemptChallenge, duelSuccess, duelFailure }
+module.exports = { addChallenge, getDuelData, attemptChallenge, duelSuccess, duelFailure, getChallengeData }

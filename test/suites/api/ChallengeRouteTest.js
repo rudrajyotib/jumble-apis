@@ -203,7 +203,7 @@ describe("should do service operations", function () {
         assert.isEmpty(duelData)
     })
 
-    it('attemptChallenge: /attemptChallenge/:duelId - should update to mark duel success', async function () {
+    it('challengeSuccess: /attemptChallenge/:duelId - should update to mark duel success', async function () {
         let expectation = challengeServiceMock.expects('updateDuelData').once().resolves(true)
         const response = await request("http://localhost:3000")
             .post("/challenge/success/someDuelId")
@@ -221,7 +221,7 @@ describe("should do service operations", function () {
         assert.isEmpty(duelData)
     })
 
-    it('attemptChallenge: /attemptChallenge/:duelId - should update to mark duel success', async function () {
+    it('challengeSuccess: /attemptChallenge/:duelId - should update to mark duel success', async function () {
         let expectation = challengeServiceMock.expects('updateDuelData').once().resolves(false)
         const response = await request("http://localhost:3000")
             .post("/challenge/success/someDuelId")
@@ -239,7 +239,7 @@ describe("should do service operations", function () {
         assert.isEmpty(duelData)
     })
 
-    it('attemptChallenge: /attemptChallenge/:duelId - should update to mark duel success', async function () {
+    it('challengeSuccess: /attemptChallenge/:duelId - should update to mark duel success', async function () {
         let expectation = challengeServiceMock.expects('updateDuelData').once().rejects({ error: 'mock error' })
         const response = await request("http://localhost:3000")
             .post("/challenge/success/someDuelId")
@@ -257,7 +257,7 @@ describe("should do service operations", function () {
         assert.isEmpty(duelData)
     })
 
-    it('attemptChallenge: /attemptChallenge/:duelId - should update to mark duel failure', async function () {
+    it('failChallenge: /attemptChallenge/:duelId - should update to mark duel failure', async function () {
         let expectation = challengeServiceMock.expects('updateDuelData').once().resolves(true)
         const response = await request("http://localhost:3000")
             .post("/challenge/failure/someDuelId")
@@ -275,7 +275,7 @@ describe("should do service operations", function () {
         assert.isEmpty(duelData)
     })
 
-    it('attemptChallenge: /attemptChallenge/:duelId - should update to mark duel failure', async function () {
+    it('failChallenge: /attemptChallenge/:duelId - should update to mark duel failure', async function () {
         let expectation = challengeServiceMock.expects('updateDuelData').once().resolves(false)
         const response = await request("http://localhost:3000")
             .post("/challenge/failure/someDuelId")
@@ -293,7 +293,7 @@ describe("should do service operations", function () {
         assert.isEmpty(duelData)
     })
 
-    it('attemptChallenge: /attemptChallenge/:duelId - should update to mark duel failure', async function () {
+    it('failChallenge: /attemptChallenge/:duelId - should update to mark duel failure', async function () {
         let expectation = challengeServiceMock.expects('updateDuelData').once().rejects({ error: 'mock error' })
         const response = await request("http://localhost:3000")
             .post("/challenge/failure/someDuelId")
@@ -312,4 +312,49 @@ describe("should do service operations", function () {
     })
 
 
+    it('getChallengeData:/challenge/:challengeId - should return the challenge data', async function () {
+        let expectation = challengeServiceMock.expects('getChallengeData').once().resolves({
+            found: true,
+            data: { type: 'jumble', question: { questionData: 'soemWord' } }
+        })
+        const response = await request("http://localhost:3000")
+            .get("/challenge/challenge/someChallengeId")
+            .send()
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation.getCall(0), sinon.match('someChallengeId'))
+        assert.equal(response.status, 200)
+        const duelData = response.body
+        assert.equal(duelData.type, 'jumble')
+        assert.equal(duelData.question.questionData, 'soemWord')
+    })
+
+    it('getChallengeData: /challenge/:challengeId - should return error response when challenge data does not exist', async function () {
+        let expectation = challengeServiceMock.expects('getChallengeData').once().resolves({ found: false })
+        const response = await request("http://localhost:3000")
+            .get("/challenge/challenge/someChallengeId")
+            .send()
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation.getCall(0), sinon.match('someChallengeId'))
+        assert.equal(response.status, 400)
+        const challengeData = response.body
+        assert.isEmpty(challengeData)
+    })
+
+    it('getChallengeData: /challenge/:challengeId - should return error response when service layer promise fails', async function () {
+        let expectation = challengeServiceMock.expects('getChallengeData').once().rejects({ error: 'mockError' })
+        const response = await request("http://localhost:3000")
+            .get("/challenge/challenge/someChallengeId")
+            .send()
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation.getCall(0), sinon.match('someChallengeId'))
+        assert.equal(response.status, 400)
+        const challengeData = response.body
+        assert.isEmpty(challengeData)
+    })
 })

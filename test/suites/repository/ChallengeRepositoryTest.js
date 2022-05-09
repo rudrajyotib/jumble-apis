@@ -516,4 +516,53 @@ describe("should execute all challenge repository tests", function () {
 
     })
 
+    it("getChallenge::should get details of a challenge", async function () {
+        const getChallengeExpectation = documentDataMock.expects('get').once().resolves({
+            exists: true,
+            data: function () {
+                return {
+                    questionType: "jumble",
+                    question: { word: "someWord" }
+                }
+            }
+        })
+        const challengeDetails = await challengeRepo.getChallenge("someChallengeId")
+        getChallengeExpectation.verify()
+        assert.equal(getChallengeExpectation.getCall(0).args.length, 0)
+        assert(firestoreSpy.calledOnce)
+        assert(firestoreCollectionSpy.calledOnce)
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someChallengeId')
+        assert.isTrue(challengeDetails.found)
+        assert.equal(challengeDetails.data.type, 'jumble')
+        assert.equal(challengeDetails.data.question.word, 'someWord')
+    })
+
+    it("getChallenge::should handle gracefully if no data is found", async function () {
+        const getChallengeExpectation = documentDataMock.expects('get').once().resolves({
+            exists: false
+        })
+        const challengeDetails = await challengeRepo.getChallenge("someChallengeId")
+        getChallengeExpectation.verify()
+        assert.equal(getChallengeExpectation.getCall(0).args.length, 0)
+        assert(firestoreSpy.calledOnce)
+        assert(firestoreCollectionSpy.calledOnce)
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someChallengeId')
+        assert.isFalse(challengeDetails.found)
+        assert.notExists(challengeDetails.data)
+    })
+
+    it("getChallenge::should handle if get promise is rejected", async function () {
+        const getChallengeExpectation = documentDataMock.expects('get').once().rejects({
+            error: "mock error"
+        })
+        const challengeDetails = await challengeRepo.getChallenge("someChallengeId")
+        getChallengeExpectation.verify()
+        assert.equal(getChallengeExpectation.getCall(0).args.length, 0)
+        assert(firestoreSpy.calledOnce)
+        assert(firestoreCollectionSpy.calledOnce)
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someChallengeId')
+        assert.isFalse(challengeDetails.found)
+        assert.notExists(challengeDetails.data)
+    })
+
 })
