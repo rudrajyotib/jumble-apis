@@ -27,7 +27,8 @@ const firestoreCollection = {
         return firestoreDocument
     },
     where: (...args) => {
-        return querySnapshot
+        console.log('called where for real')
+        throw new Error('should always be mocked')
     }
 }
 const firestore = {

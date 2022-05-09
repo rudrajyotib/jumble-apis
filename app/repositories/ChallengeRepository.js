@@ -79,6 +79,23 @@ var challengeRepository = {
             { return { found: true, data: { type: challengeData.questionType, question: challengeData.question } } }
         }
         return { found: false }
+    },
+
+    getDuelsByTargetUserAndStatus: async function (userId, duelStatus) {
+        const result = { errorCode: 0, duels: [] }
+        await repository
+            .collection("duel")
+            .where("targetUserId", '=', userId)
+            .where("duelStatus", "=", duelStatus)
+            .get()
+            .then((querySnapshot) => {
+                result.errorCode = 1
+                querySnapshot.forEach((duelDoc) => {
+                    result.duels.push({ duelId: duelDoc.id, sourceUserId: duelDoc.data().sourceUserId })
+                })
+            })
+            .catch(() => { result.errorCode = -1 })
+        return result
     }
 
 }

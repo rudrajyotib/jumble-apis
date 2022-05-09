@@ -12,22 +12,30 @@ describe("should execute all challenge repository tests", function () {
     let challengeRepo
     let firestoreSpy
     let firestore
+    let firestoreCollectionMock
+    let querySnapshotMock
+    let firestoreCollection
 
     before(function () {
         challengeRepo = require('../../../app/repositories/ChallengeRepository')
         firestore = require('../../setup/AppSetup').firestore
+        firestoreCollection = require('../../setup/AppSetup').firestoreCollection
     })
 
     beforeEach(function () {
         documentDataMock = sinon.mock(firebaseSetup.firestoreDocument)
         firestoreCollectionSpy = sinon.spy(firebaseSetup.firestoreCollection, 'doc')
         firestoreSpy = sinon.spy(firestore, 'collection')
+        firestoreCollectionMock = sinon.mock(firebaseSetup.firestoreCollection)
+        querySnapshotMock = sinon.mock(firebaseSetup.querySnapshot)
     })
 
     afterEach(function () {
         documentDataMock.restore()
         firestoreCollectionSpy.restore()
         firestoreSpy.restore()
+        firestoreCollectionMock.restore()
+        querySnapshotMock.restore()
     })
 
     it('should set data', async function () {
@@ -563,6 +571,64 @@ describe("should execute all challenge repository tests", function () {
         sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someChallengeId')
         assert.isFalse(challengeDetails.found)
         assert.notExists(challengeDetails.data)
+    })
+
+    it("getDuelsByTargetUserAndStatus: should load all duels matching query", async function () {
+        const whereClauseExpectation = firestoreCollectionMock.expects('where').twice()
+        whereClauseExpectation.onCall(0).returns(firestoreCollection)
+        whereClauseExpectation.onCall(1).returns(firebaseSetup.querySnapshot)
+        const querySnapshotExpectation = querySnapshotMock.expects('get').once().resolves(
+            [
+                { id: 'duel1', data: function () { return { sourceUserId: 'sourceUserId1' } } },
+                { id: 'duel2', data: function () { return { sourceUserId: 'sourceUserId2' } } }
+            ]
+        )
+        const result = await challengeRepo.getDuelsByTargetUserAndStatus('user1', 'open')
+        whereClauseExpectation.verify()
+        querySnapshotExpectation.verify()
+        assert.equal(result.duels.length, 2)
+        assert.equal(result.errorCode, 1)
+        assert.equal(result.duels[0].duelId, 'duel1')
+        assert.equal(result.duels[0].sourceUserId, 'sourceUserId1')
+        assert.equal(result.duels[1].duelId, 'duel2')
+        assert.equal(result.duels[1].sourceUserId, 'sourceUserId2')
+        assert(firestoreSpy.calledOnce)
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'duel')
+        sinon.assert.calledWith(whereClauseExpectation.getCall(0), "targetUserId", '=', 'user1')
+        sinon.assert.calledWith(whereClauseExpectation.getCall(1), "duelStatus", "=", 'open')
+    })
+
+    it("getDuelsByTargetUserAndStatus: should send success error code with empty array when no match", async function () {
+        const whereClauseExpectation = firestoreCollectionMock.expects('where').twice()
+        whereClauseExpectation.onCall(0).returns(firestoreCollection)
+        whereClauseExpectation.onCall(1).returns(firebaseSetup.querySnapshot)
+        const querySnapshotExpectation = querySnapshotMock.expects('get').once().resolves([])
+        const result = await challengeRepo.getDuelsByTargetUserAndStatus('user1', 'open')
+        whereClauseExpectation.verify()
+        querySnapshotExpectation.verify()
+        assert.equal(result.duels.length, 0)
+        assert.equal(result.errorCode, 1)
+
+        assert(firestoreSpy.calledOnce)
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'duel')
+        sinon.assert.calledWith(whereClauseExpectation.getCall(0), "targetUserId", '=', 'user1')
+        sinon.assert.calledWith(whereClauseExpectation.getCall(1), "duelStatus", "=", 'open')
+    })
+
+    it("getDuelsByTargetUserAndStatus: should handle rejection", async function () {
+        const whereClauseExpectation = firestoreCollectionMock.expects('where').twice()
+        whereClauseExpectation.onCall(0).returns(firestoreCollection)
+        whereClauseExpectation.onCall(1).returns(firebaseSetup.querySnapshot)
+        const querySnapshotExpectation = querySnapshotMock.expects('get').once().rejects({ error: 'mock error' })
+        const result = await challengeRepo.getDuelsByTargetUserAndStatus('user1', 'open')
+        whereClauseExpectation.verify()
+        querySnapshotExpectation.verify()
+        assert.equal(result.duels.length, 0)
+        assert.equal(result.errorCode, -1)
+        assert(firestoreSpy.calledOnce)
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'duel')
+        sinon.assert.calledWith(whereClauseExpectation.getCall(0), "targetUserId", '=', 'user1')
+        sinon.assert.calledWith(whereClauseExpectation.getCall(1), "duelStatus", "=", 'open')
     })
 
 })
