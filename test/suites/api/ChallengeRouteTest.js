@@ -357,4 +357,77 @@ describe("should do service operations", function () {
         const challengeData = response.body
         assert.isEmpty(challengeData)
     })
+
+    it("listPendingDuels: /pendingduels/:targetUserId - should load all pending duels and send in response", async function () {
+        let expectation = challengeServiceMock.expects('listOfPendingDuels').once().resolves({
+            found: true, duels: [
+                { duelId: 'd1', sourceUser: 'someSourceUser1', challengeId: 'c1' },
+                { duelId: 'd2', sourceUser: 'someSourceUser2', challengeId: 'c2' }
+            ]
+        })
+        const response = await request("http://localhost:3000")
+            .get("/challenge/pendingduels/someTargetUserId")
+            .send()
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation.getCall(0), sinon.match('someTargetUserId'))
+        assert.equal(response.status, 200)
+        const challengeData = response.body
+        assert.equal(challengeData.length, 2)
+        assert.equal(challengeData[0].duelId, 'd1')
+        assert.equal(challengeData[0].sourceUser, 'someSourceUser1')
+        assert.equal(challengeData[0].challengeId, 'c1')
+        assert.equal(challengeData[0].duelId, 'd1')
+        assert.equal(challengeData[0].sourceUser, 'someSourceUser1')
+        assert.equal(challengeData[0].challengeId, 'c1')
+    })
+
+    it("listPendingDuels: /pendingduels/:targetUserId - should handle if service returns empty array", async function () {
+        let expectation = challengeServiceMock.expects('listOfPendingDuels').once().resolves({
+            found: true, duels: []
+        })
+        const response = await request("http://localhost:3000")
+            .get("/challenge/pendingduels/someTargetUserId")
+            .send()
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation.getCall(0), sinon.match('someTargetUserId'))
+        assert.equal(response.status, 400)
+        const challengeData = response.body
+        assert.isEmpty(challengeData)
+    })
+
+    it("listPendingDuels: /pendingduels/:targetUserId - should handle if service notifies not found", async function () {
+        let expectation = challengeServiceMock.expects('listOfPendingDuels').once().resolves({
+            found: false
+        })
+        const response = await request("http://localhost:3000")
+            .get("/challenge/pendingduels/someTargetUserId")
+            .send()
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation.getCall(0), sinon.match('someTargetUserId'))
+        assert.equal(response.status, 400)
+        const challengeData = response.body
+        assert.isEmpty(challengeData)
+    })
+
+    it("listPendingDuels: /pendingduels/:targetUserId - should handle if service fails", async function () {
+        let expectation = challengeServiceMock.expects('listOfPendingDuels').once().rejects({
+            error: 'mock error'
+        })
+        const response = await request("http://localhost:3000")
+            .get("/challenge/pendingduels/someTargetUserId")
+            .send()
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation.getCall(0), sinon.match('someTargetUserId'))
+        assert.equal(response.status, 400)
+        const challengeData = response.body
+        assert.isEmpty(challengeData)
+    })
 })

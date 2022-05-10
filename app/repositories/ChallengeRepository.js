@@ -91,7 +91,7 @@ var challengeRepository = {
             .then((querySnapshot) => {
                 result.errorCode = 1
                 querySnapshot.forEach((duelDoc) => {
-                    result.duels.push({ duelId: duelDoc.id, sourceUserId: duelDoc.data().sourceUserId })
+                    result.duels.push({ duelId: duelDoc.id, sourceUserId: duelDoc.data().sourceUserId, challengeId: duelDoc.data().challengeId })
                 })
             })
             .catch(() => { result.errorCode = -1 })

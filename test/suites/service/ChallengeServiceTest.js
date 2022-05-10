@@ -5,19 +5,24 @@ const { assert } = require('chai')
 describe("challenge service test suite", function () {
     let challengeService
     let challengeRepositoryMock
+    let userRepositoryMock
     let challengeRepo
+    let userRepo
 
     before(function () {
         challengeService = require('../../../app/service/ChallengeService')
         challengeRepo = require('../../../app/repositories/ChallengeRepository')
+        userRepo = require('../../../app/repositories/UserRepository')
     })
 
     beforeEach(function () {
         challengeRepositoryMock = sinon.mock(challengeRepo)
+        userRepositoryMock = sinon.mock(userRepo)
     })
 
     afterEach(function () {
         challengeRepositoryMock.restore()
+        userRepositoryMock.restore()
     })
 
     it("addChallenge:challenge service should add challenge data", async function () {
@@ -296,5 +301,73 @@ describe("challenge service test suite", function () {
         assert.notExists(challengeData.data)
         addChallenegeExpectation.verify()
         sinon.assert.calledWith(addChallenegeExpectation.getCall(0), sinon.match("someChallengeId"))
+    })
+
+    it("listOfPendingDuels: should get all duels with source user name and challenge Id", async function () {
+        let challengeRepoExpectation = challengeRepositoryMock.expects('getDuelsByTargetUserAndStatus')
+        let userRepoExpectation = userRepositoryMock.expects('getUser')
+        challengeRepoExpectation.once().resolves({
+            errorCode: 1, duels: [
+                { duelId: 'd1', sourceUserId: 'sourceUserId1', challengeId: 'c1' },
+                { duelId: 'd2', sourceUserId: 'sourceUserId2', challengeId: 'c2' },
+                { duelId: 'd3', challengeId: 'c3' },
+                { duelId: 'd4', sourceUserId: 'sourceUserId4', challengeId: 'c4' },
+            ]
+        })
+        userRepoExpectation.exactly(3)
+        userRepoExpectation.onCall(0).resolves({ found: true, id: 'sourceUserId1', name: 'sourceUserName1', email: 'sourceUserEmail1' })
+        userRepoExpectation.onCall(1).resolves({ found: true, id: 'sourceUserId2', name: 'sourceUserName2', email: 'sourceUserEmail2' })
+        userRepoExpectation.onCall(2).resolves({ found: false })
+        const duelDetails = await challengeService.listOfPendingDuels('someTargetUserId')
+        challengeRepoExpectation.verify()
+        userRepoExpectation.verify()
+        assert.isTrue(duelDetails.found)
+        assert.equal(duelDetails.duels.length, 2)
+        assert.equal(duelDetails.duels[0].sourceUser, 'sourceUserName1')
+        assert.equal(duelDetails.duels[0].duelId, 'd1')
+        assert.equal(duelDetails.duels[0].challengeId, 'c1')
+        assert.equal(duelDetails.duels[1].sourceUser, 'sourceUserName2')
+        assert.equal(duelDetails.duels[1].duelId, 'd2')
+        assert.equal(duelDetails.duels[1].challengeId, 'c2')
+        sinon.assert.calledWith(challengeRepoExpectation.getCall(0), 'someTargetUserId', 'pendingAction')
+        sinon.assert.calledWith(userRepoExpectation.getCall(0), 'sourceUserId1')
+        sinon.assert.calledWith(userRepoExpectation.getCall(1), 'sourceUserId2')
+        sinon.assert.calledWith(userRepoExpectation.getCall(2), 'sourceUserId4')
+    })
+
+    it("listOfPendingDuels: should handle when duels are not found by repo", async function () {
+        let challengeRepoExpectation = challengeRepositoryMock.expects('getDuelsByTargetUserAndStatus')
+        let userRepoExpectation = userRepositoryMock.expects('getUser')
+        challengeRepoExpectation.once().resolves({ errorCode: -1, })
+        userRepoExpectation.never()
+        const duelDetails = await challengeService.listOfPendingDuels('someTargetUserId')
+        challengeRepoExpectation.verify()
+        userRepoExpectation.verify()
+        assert.isFalse(duelDetails.found)
+        assert.notExists(duelDetails.duels)
+    })
+
+    it("listOfPendingDuels: should handle errors in repo", async function () {
+        let challengeRepoExpectation = challengeRepositoryMock.expects('getDuelsByTargetUserAndStatus')
+        let userRepoExpectation = userRepositoryMock.expects('getUser')
+        challengeRepoExpectation.once().rejects({ error: 'mock error' })
+        userRepoExpectation.never()
+        const duelDetails = await challengeService.listOfPendingDuels('someTargetUserId')
+        challengeRepoExpectation.verify()
+        userRepoExpectation.verify()
+        assert.isFalse(duelDetails.found)
+        assert.notExists(duelDetails.duels)
+    })
+
+    it("listOfPendingDuels: should handle blank input", async function () {
+        let challengeRepoExpectation = challengeRepositoryMock.expects('getDuelsByTargetUserAndStatus')
+        let userRepoExpectation = userRepositoryMock.expects('getUser')
+        challengeRepoExpectation.never()
+        userRepoExpectation.never()
+        const duelDetails = await challengeService.listOfPendingDuels('')
+        challengeRepoExpectation.verify()
+        userRepoExpectation.verify()
+        assert.isFalse(duelDetails.found)
+        assert.notExists(duelDetails.duels)
     })
 })

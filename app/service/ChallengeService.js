@@ -1,4 +1,5 @@
 const challengeRepo = require('../repositories/ChallengeRepository')
+const userRepo = require('../repositories/UserRepository')
 
 
 const challengeService = {
@@ -48,6 +49,19 @@ const challengeService = {
         }
         const updateResult = await challengeRepo.updateDuel(updateEvent).catch(() => { return false })
         return updateResult
+    },
+
+    listOfPendingDuels: async function (targetUserId) {
+        if (!targetUserId || '' === targetUserId) { return { found: false } }
+        const pendingDuels = await challengeRepo.getDuelsByTargetUserAndStatus(targetUserId, 'pendingAction').catch(() => { return { errorCode: -1 } })
+        if (pendingDuels.errorCode != 1) { return { found: false } }
+        const result = { found: true, duels: [] }
+        await Promise.all(pendingDuels.duels.map(async (duel) => {
+            if (!duel.sourceUserId || '' === duel.sourceUserId) { return }
+            const duelSourceUser = await userRepo.getUser(duel.sourceUserId)
+            if (duelSourceUser.found) { result.duels.push({ duelId: duel.duelId, sourceUser: duelSourceUser.name, challengeId: duel.challengeId }) }
+        }))
+        return result
     }
 }
 

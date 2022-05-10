@@ -579,8 +579,8 @@ describe("should execute all challenge repository tests", function () {
         whereClauseExpectation.onCall(1).returns(firebaseSetup.querySnapshot)
         const querySnapshotExpectation = querySnapshotMock.expects('get').once().resolves(
             [
-                { id: 'duel1', data: function () { return { sourceUserId: 'sourceUserId1' } } },
-                { id: 'duel2', data: function () { return { sourceUserId: 'sourceUserId2' } } }
+                { id: 'duel1', data: function () { return { sourceUserId: 'sourceUserId1', challengeId: 'c1' } } },
+                { id: 'duel2', data: function () { return { sourceUserId: 'sourceUserId2', challengeId: 'c2' } } }
             ]
         )
         const result = await challengeRepo.getDuelsByTargetUserAndStatus('user1', 'open')
@@ -590,8 +590,10 @@ describe("should execute all challenge repository tests", function () {
         assert.equal(result.errorCode, 1)
         assert.equal(result.duels[0].duelId, 'duel1')
         assert.equal(result.duels[0].sourceUserId, 'sourceUserId1')
+        assert.equal(result.duels[0].challengeId, 'c1')
         assert.equal(result.duels[1].duelId, 'duel2')
         assert.equal(result.duels[1].sourceUserId, 'sourceUserId2')
+        assert.equal(result.duels[1].challengeId, 'c2')
         assert(firestoreSpy.calledOnce)
         sinon.assert.calledWith(firestoreSpy.getCall(0), 'duel')
         sinon.assert.calledWith(whereClauseExpectation.getCall(0), "targetUserId", '=', 'user1')

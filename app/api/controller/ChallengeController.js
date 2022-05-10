@@ -65,9 +65,20 @@ const duelFailure = async (req, res, next) => {
     }
 }
 
+const listPendingDuels = async (req, res, next) => {
+    const pendingDuels = await challengeService.listOfPendingDuels(req.params.targetUserId).catch(() => { return { found: false } })
+    if (pendingDuels.found && pendingDuels.duels && pendingDuels.duels.length > 0) {
+        res.status(200).send(pendingDuels.duels)
+    } else {
+        res.status(400).send()
+    }
+}
+
 const updateDuelStatus = async (duelId, state) => {
     const duelUpdateInput = { duelId: duelId, duelEvent: state }
     return await challengeService.updateDuelData(duelUpdateInput).catch(() => { return false })
 }
 
-module.exports = { addChallenge, getDuelData, attemptChallenge, duelSuccess, duelFailure, getChallengeData }
+
+
+module.exports = { addChallenge, getDuelData, attemptChallenge, duelSuccess, duelFailure, getChallengeData, listPendingDuels }

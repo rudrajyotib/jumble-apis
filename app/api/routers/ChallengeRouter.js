@@ -8,5 +8,6 @@ challengeRouter.post("/success/:duelId", challengeController.duelSuccess)
 challengeRouter.post("/failure/:duelId", challengeController.duelFailure)
 challengeRouter.get("/duel/:duelId", challengeController.getDuelData)
 challengeRouter.get("/challenge/:challengeId", challengeController.getChallengeData)
+challengeRouter.get("/pendingduels/:targetUserId", challengeController.listPendingDuels)
 
 module.exports = challengeRouter
