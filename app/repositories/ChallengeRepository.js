@@ -27,7 +27,7 @@ var challengeRepository = {
         if (!duelDoc.exists) { return false }
         duelPersistedData = (await duelDoc).data()
         const duelDataUpdate = {}
-        if (!'' != duelUpdate.status) { duelDataUpdate.duelStatus = duelUpdate.status }
+        if (duelUpdate.status && '' != duelUpdate.status) { duelDataUpdate.duelStatus = duelUpdate.status }
         if (duelUpdate.scoreUpdate) {
             duelDataUpdate.score = duelPersistedData.score
             duelDataUpdate.score[duelPersistedData.targetUserId] += 1
@@ -36,7 +36,7 @@ var challengeRepository = {
             duelDataUpdate.sourceUserId = duelPersistedData.targetUserId
             duelDataUpdate.targetUserId = duelPersistedData.sourceUserId
         }
-        if ('' != duelUpdate.challengeId) {
+        if (duelUpdate.challengeId && '' != duelUpdate.challengeId) {
             duelDataUpdate.challengeId = duelUpdate.challengeId
         }
         const updateResult = await duelDocReference.update(duelDataUpdate).then(() => { return true }).catch(() => { return false })
@@ -67,7 +67,18 @@ var challengeRepository = {
         let duelDoc = await repository.collection("duel").doc(duelId).get()
         if (duelDoc.exists) {
             const duel = duelDoc.data()
-            { return { found: true, data: { status: duel.duelStatus, sourceUserId: duel.sourceUserId, targetUserId: duel.targetUserId, challengeId: duel.challengeId, score: duel.score } } }
+            {
+                duelData = {}
+                if (duel.challengeId && '' != duel.challengeId) { duelData.challengeId = duel.challengeId }
+                duelData.status = duel.duelStatus
+                duelData.sourceUserId = duel.sourceUserId
+                duelData.targetUserId = duel.targetUserId
+                duelData.score = duel.score
+                return {
+                    found: true,
+                    data: duelData
+                }
+            }
         }
         return { found: false }
     },

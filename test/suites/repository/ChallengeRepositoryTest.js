@@ -158,7 +158,7 @@ describe("should execute all challenge repository tests", function () {
             assert.exists(duel.score)
             assert.equal(duel.score['someSourceId'], 2)
             assert.equal(duel.score['someTargetId'], 1)
-            assert.notExists(duel.challengeId)
+            assert.notProperty(duel, 'challengeId')
             return true
         }))
     })
@@ -173,7 +173,7 @@ describe("should execute all challenge repository tests", function () {
         sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someDuelId')
         sinon.assert.calledWith(firestoreSpy.getCall(0), 'duel')
         assert.isFalse(duelData.found)
-        assert.notExists(duelData.data)
+        assert.notProperty(duelData, 'data')
     })
 
     it('updateDuel:should update duel with all details', async function () {
@@ -258,10 +258,10 @@ describe("should execute all challenge repository tests", function () {
         sinon.assert.calledWith(firestoreSpy.getCall(0), 'duel')
         sinon.assert.calledWith(updateDuelExpectation.getCall(0), sinon.match((updateInput) => {
             assert.exists(updateInput.duelStatus)
-            assert.notExists(updateInput.sourceUserId)
-            assert.notExists(updateInput.targetUserId)
-            assert.notExists(updateInput.challengeId)
-            assert.notExists(updateInput.score)
+            assert.notProperty(updateInput, 'sourceUserId')
+            assert.notProperty(updateInput, 'targetUserId')
+            assert.notProperty(updateInput, 'challengeId')
+            assert.notProperty(updateInput, 'score')
             assert.equal(updateInput.duelStatus, 'active')
             // assert.equal(updateInput.sourceUserId, 'someTargetId')
             // assert.equal(updateInput.targetUserId, 'someSourceId')
@@ -306,17 +306,12 @@ describe("should execute all challenge repository tests", function () {
         sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someDuelId')
         sinon.assert.calledWith(firestoreSpy.getCall(0), 'duel')
         sinon.assert.calledWith(updateDuelExpectation.getCall(0), sinon.match((updateInput) => {
-            assert.notExists(updateInput.duelStatus)
-            assert.notExists(updateInput.sourceUserId)
-            assert.notExists(updateInput.targetUserId)
+            assert.notProperty(updateInput, 'duelStatus')
+            assert.notProperty(updateInput, 'sourceUserId')
+            assert.notProperty(updateInput, 'targetUserId')
             assert.exists(updateInput.challengeId)
-            assert.notExists(updateInput.score)
-            // assert.equal(updateInput.duelStatus, 'active')
-            // assert.equal(updateInput.sourceUserId, 'someTargetId')
-            // assert.equal(updateInput.targetUserId, 'someSourceId')
+            assert.notProperty(updateInput, 'score')
             assert.equal(updateInput.challengeId, 'c1')
-            // assert.equal(updateInput.score['someSourceId'], 4)
-            // assert.equal(updateInput.score['someTargetId'], 9)
             return true
         }))
 
@@ -343,9 +338,7 @@ describe("should execute all challenge repository tests", function () {
         updateDuelExpectation.once().resolves()
         const updateResult = await challengeRepo.updateDuel({
             status: 'active',
-            // scoreUpdate: true,
             roleChange: true,
-            // challengeId: 'c1',
             duelId: 'someDuelId'
         })
         assert.isTrue(updateResult)
@@ -359,14 +352,11 @@ describe("should execute all challenge repository tests", function () {
             assert.exists(updateInput.duelStatus)
             assert.exists(updateInput.sourceUserId)
             assert.exists(updateInput.targetUserId)
-            assert.notExists(updateInput.challengeId)
-            assert.notExists(updateInput.score)
+            assert.notProperty(updateInput, 'challengeId')
+            assert.notProperty(updateInput, 'score')
             assert.equal(updateInput.duelStatus, 'active')
             assert.equal(updateInput.sourceUserId, 'someTargetId')
             assert.equal(updateInput.targetUserId, 'someSourceId')
-            // assert.equal(updateInput.challengeId, 'c1')
-            // assert.equal(updateInput.score['someSourceId'], 4)
-            // assert.equal(updateInput.score['someTargetId'], 9)
             return true
         }))
     })
@@ -407,8 +397,8 @@ describe("should execute all challenge repository tests", function () {
             assert.exists(updateInput.duelStatus)
             assert.exists(updateInput.sourceUserId)
             assert.exists(updateInput.targetUserId)
-            assert.notExists(updateInput.challengeId)
-            assert.notExists(updateInput.score)
+            assert.notProperty(updateInput, 'challengeId')
+            assert.notProperty(updateInput, 'score')
             assert.equal(updateInput.duelStatus, 'active')
             assert.equal(updateInput.sourceUserId, 'someTargetId')
             assert.equal(updateInput.targetUserId, 'someSourceId')
@@ -556,7 +546,7 @@ describe("should execute all challenge repository tests", function () {
         assert(firestoreCollectionSpy.calledOnce)
         sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someChallengeId')
         assert.isFalse(challengeDetails.found)
-        assert.notExists(challengeDetails.data)
+        assert.notProperty(challengeDetails, 'data')
     })
 
     it("getChallenge::should handle if get promise is rejected", async function () {
@@ -570,7 +560,7 @@ describe("should execute all challenge repository tests", function () {
         assert(firestoreCollectionSpy.calledOnce)
         sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someChallengeId')
         assert.isFalse(challengeDetails.found)
-        assert.notExists(challengeDetails.data)
+        assert.notProperty(challengeDetails, 'data')
     })
 
     it("getDuelsByTargetUserAndStatus: should load all duels matching query", async function () {
