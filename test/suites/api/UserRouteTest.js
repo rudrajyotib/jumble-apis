@@ -385,4 +385,40 @@ describe("should do service operations", function () {
         assert.equal(response.text, 'no result')
     })
 
+    it("/isChallengeable/:sourceUserId/:targetUserId - should identify friends as challengeable", async function () {
+        let serviceExpectation = userServiceMock.expects('isEligibleForChallenge').once().resolves(true)
+        const response = await request("http://localhost:3000")
+            .get("/user/isChallengeable/someSourceUserId/someTargetUserId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation.getCall(0), sinon.match("someSourceUserId"), sinon.match("someTargetUserId"))
+        assert.equal(response.status, 200)
+        assert.exists(response.body)
+        assert.equal(response.body.challengeable, true)
+    })
+
+    it("/isChallengeable/:sourceUserId/:targetUserId - should identify friends as not challengeable from service response", async function () {
+        let serviceExpectation = userServiceMock.expects('isEligibleForChallenge').once().resolves(false)
+        const response = await request("http://localhost:3000")
+            .get("/user/isChallengeable/someSourceUserId/someTargetUserId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation.getCall(0), sinon.match("someSourceUserId"), sinon.match("someTargetUserId"))
+        assert.equal(response.status, 200)
+        assert.exists(response.body)
+        assert.equal(response.body.challengeable, false)
+    })
+
+    it("/isChallengeable/:sourceUserId/:targetUserId - should identify friends as not challengeable from service rejection", async function () {
+        let serviceExpectation = userServiceMock.expects('isEligibleForChallenge').once().rejects({ error: 'mock error' })
+        const response = await request("http://localhost:3000")
+            .get("/user/isChallengeable/someSourceUserId/someTargetUserId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation.getCall(0), sinon.match("someSourceUserId"), sinon.match("someTargetUserId"))
+        assert.equal(response.status, 200)
+        assert.exists(response.body)
+        assert.equal(response.body.challengeable, false)
+    })
+
 })

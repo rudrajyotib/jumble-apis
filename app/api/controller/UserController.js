@@ -57,8 +57,22 @@ const listPendingFriendRequests = async function (request, response, next) {
     await searchFriendsByStatus(request, response, 'pending')
 }
 
+const isChallengeable = async function (request, response, next) {
+    await userService.isEligibleForChallenge(request.params.sourceUserId, request.params.targetUserId)
+        .then((challengeable) => {
+            response.status(200).send({
+                challengeable: challengeable
+            })
+        })
+        .catch((error) => {
+            response.status(200).send({
+                challengeable: false
+            })
+        })
+}
 
-module.exports = { signUp, addFriend, isFriend, confirmFriend, listFriends, listPendingFriendRequests }
+
+module.exports = { signUp, addFriend, isFriend, confirmFriend, listFriends, listPendingFriendRequests, isChallengeable }
 
 async function searchFriendsByStatus(request, response, status) {
     const userId = request.params.userId
