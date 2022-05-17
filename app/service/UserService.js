@@ -76,6 +76,16 @@ module.exports = {
                 return false
             })
         return result
+    },
+
+    getFriendDetails: async function (sourceUserId, targetUserId) {
+        const result = await userRepo.getFriendshipDetails(sourceUserId, targetUserId)
+            .then((result) => { return result })
+            .catch((err) => {
+                console.log('service error::' + JSON.stringify(err))
+                return { found: false }
+            })
+        return result
     }
 }
 

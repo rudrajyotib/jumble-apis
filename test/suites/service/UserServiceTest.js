@@ -569,7 +569,7 @@ describe("should operate user operations", function () {
         assert.equal(result.result, -1)
     })
 
-    it("should check if users are friends", async function () {
+    it("isFriend: should check if users are friends", async function () {
         let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
 
         userRepoFriendCheckExpectation.once().resolves(true)
@@ -589,7 +589,7 @@ describe("should operate user operations", function () {
         assert.isTrue(result)
     })
 
-    it("should handle if repository fails", async function () {
+    it("isFriend:should handle if repository fails", async function () {
         let userRepoFriendCheckExpectation = userRepositoryMock.expects('isFriend')
 
         userRepoFriendCheckExpectation.once().rejects({ exception: 'failure' })
@@ -803,5 +803,25 @@ describe("should operate user operations", function () {
         }))
         assert.equal(result.result, -1)
         assert.notExists(result.friends)
+    })
+
+    it("getFriendDetails: should get friend details", async function () {
+        let userRepoFriendSearchExpectation = userRepositoryMock.expects('getFriendshipDetails')
+        userRepoFriendSearchExpectation.once().resolves({ found: true, status: 'confirmed' })
+        const result = await userService.getFriendDetails('someSourceUserId', 'someTargetUserId')
+        userRepoFriendSearchExpectation.verify()
+        sinon.assert.calledWith(userRepoFriendSearchExpectation.getCall(0), sinon.match('someSourceUserId'), sinon.match('someTargetUserId'))
+        assert.isTrue(result.found)
+        assert.equal(result.status, 'confirmed')
+    })
+
+    it("getFriendDetails: should handle if repo request rejects", async function () {
+        let userRepoFriendSearchExpectation = userRepositoryMock.expects('getFriendshipDetails')
+        userRepoFriendSearchExpectation.once().rejects({ found: false })
+        const result = await userService.getFriendDetails('someSourceUserId', 'someTargetUserId')
+        userRepoFriendSearchExpectation.verify()
+        sinon.assert.calledWith(userRepoFriendSearchExpectation.getCall(0), sinon.match('someSourceUserId'), sinon.match('someTargetUserId'))
+        assert.isFalse(result.found)
+        assert.notProperty(result, 'status')
     })
 })
