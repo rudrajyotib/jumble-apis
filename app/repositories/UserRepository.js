@@ -134,6 +134,27 @@ var userRepository = {
         } else {
             return true
         }
+    },
+
+    getFriendshipDetails: async function (sourceUserId, targetUserId) {
+        const targetFriend = await repository
+            .collection("friends")
+            .doc(sourceUserId)
+            .collection('friendlist')
+            .doc(targetUserId)
+            .get()
+            .catch((err) => {
+                console.log('Friendlist check throws error')
+                return { exists: false }
+            })
+        if (!targetFriend.exists) {
+            return { found: false }
+        } else {
+            return {
+                found: true,
+                status: targetFriend.data().status
+            }
+        }
     }
 
 
