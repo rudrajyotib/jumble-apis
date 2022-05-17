@@ -371,7 +371,7 @@ describe("should execute all user repository tests", function () {
         let documentDataCollectionMockExpectation = documentDataMock.expects('collection')
         let documentDataGetMockExpectation = documentDataMock.expects('get')
         documentDataCollectionMockExpectation.once().returns(firestoreCollection)
-        documentDataGetMockExpectation.once().resolves({ exists: true, data: function () { return { status: 'confirmed' } } })
+        documentDataGetMockExpectation.once().resolves({ exists: true, data: function () { return { status: 'confirmed', duelId: 'someDuelId' } } })
         const friendDetails = await userRepo.getFriendshipDetails('sourceUser', 'targetUser')
         documentDataCollectionMockExpectation.verify()
         documentDataGetMockExpectation.verify()
@@ -383,6 +383,7 @@ describe("should execute all user repository tests", function () {
         sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
         assert.isTrue(friendDetails.found)
         assert.equal(friendDetails.status, 'confirmed')
+        assert.equal(friendDetails.duelId, 'someDuelId')
     })
 
     it("getFriendshipDetails:should return not found if data is not found in repo", async function () {
@@ -401,6 +402,7 @@ describe("should execute all user repository tests", function () {
         sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
         assert.isFalse(friendDetails.found)
         assert.notProperty(friendDetails, 'status')
+        assert.notProperty(friendDetails, 'duelId')
     })
 
     it("getFriendshipDetails:should return not found if collection throws error", async function () {
@@ -419,6 +421,7 @@ describe("should execute all user repository tests", function () {
         sinon.assert.calledWith(documentDataCollectionMockExpectation.getCall(0), "friendlist")
         assert.isFalse(friendDetails.found)
         assert.notProperty(friendDetails, 'status')
+        assert.notProperty(friendDetails, 'duelId')
     })
 
 

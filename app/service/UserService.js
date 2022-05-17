@@ -2,6 +2,7 @@ const userRepo = require('../repositories/UserRepository')
 const challengeRepo = require('../repositories/ChallengeRepository')
 const onlineUserRepo = require('../repositories/OnlineUserRepository')
 const { v4: uuidv4 } = require('uuid')
+const challengeRepository = require('../repositories/ChallengeRepository')
 
 
 const listFriendsWithStatus = async function (userId, status) {
@@ -78,14 +79,19 @@ module.exports = {
         return result
     },
 
-    getFriendDetails: async function (sourceUserId, targetUserId) {
+    isEligibleForChallenge: async function (sourceUserId, targetUserId) {
         const result = await userRepo.getFriendshipDetails(sourceUserId, targetUserId)
             .then((result) => { return result })
             .catch((err) => {
                 console.log('service error::' + JSON.stringify(err))
                 return { found: false }
             })
-        return result
+        if (!result.found || 'confirmed' != result.status || !result.duelId || '' === result.duelId) { return false }
+        const duelData = await challengeRepository.getDuel(result.duelId).catch((err) => { return { found: false } })
+        if (!duelData.found) { return false }
+        const duelDetails = duelData.data
+        if ('open' === duelDetails.status || ('active' === duelDetails.status && sourceUserId === duelDetails.sourceUserId)) { return true }
+        return false
     }
 }
 

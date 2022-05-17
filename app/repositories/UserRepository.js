@@ -152,7 +152,8 @@ var userRepository = {
         } else {
             return {
                 found: true,
-                status: targetFriend.data().status
+                status: targetFriend.data().status,
+                duelId: targetFriend.data().duelId
             }
         }
     }
