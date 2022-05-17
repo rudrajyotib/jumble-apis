@@ -57,6 +57,14 @@ const appUserIdAvailable = async function (request, response, next) {
     else { response.status(500).send() }
 }
 
+const getEmailIdFromAppUserId = async function (request, response, next) {
+    const appUserId = request.params.appUserId
+    const user = await userService.findUserByAppUserId(appUserId).catch((err) => { return { result: -1 } })
+    if (user.result == 0) { response.status(204).send() }
+    else if (user.result == 1) { response.status(200).send({ email: user.email }) }
+    else { response.status(500).send() }
+}
+
 const listFriends = async function (request, response, next) {
     await searchFriendsByStatus(request, response, 'confirmed')
 }
@@ -80,7 +88,10 @@ const isChallengeable = async function (request, response, next) {
 }
 
 
-module.exports = { signUp, addFriend, isFriend, confirmFriend, listFriends, listPendingFriendRequests, isChallengeable, appUserIdAvailable }
+module.exports = {
+    signUp, addFriend, isFriend, confirmFriend,
+    listFriends, listPendingFriendRequests, isChallengeable, appUserIdAvailable, getEmailIdFromAppUserId
+}
 
 async function searchFriendsByStatus(request, response, status) {
     const userId = request.params.userId

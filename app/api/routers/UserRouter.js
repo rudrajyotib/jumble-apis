@@ -10,6 +10,7 @@ loginRouter.get("/friends/:userId", userController.listFriends)
 loginRouter.get("/pendingfriends/:userId", userController.listPendingFriendRequests)
 loginRouter.get("/isChallengeable/:sourceUserId/:targetUserId", userController.isChallengeable)
 loginRouter.get("/userIdAvailable/:appUserId", userController.appUserIdAvailable)
+loginRouter.get("/emailIdForLogin/:appUserId", userController.getEmailIdFromAppUserId)
 
 
 module.exports = loginRouter

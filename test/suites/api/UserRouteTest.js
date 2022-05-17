@@ -455,7 +455,7 @@ describe("should do service operations", function () {
         sinon.assert.calledWith(serviceExpectation.getCall(0), sinon.match("someAppUserId"))
         assert.equal(response.status, 500)
         assert.exists(response.body)
-        assert.notProperty(response.body, 'exists')
+        chai.expect(response.body).to.be.empty
     })
 
     it("/userIdAvailable/:appUserId - should return server error code false if service fails", async function () {
@@ -467,7 +467,43 @@ describe("should do service operations", function () {
         sinon.assert.calledWith(serviceExpectation.getCall(0), sinon.match("someAppUserId"))
         assert.equal(response.status, 500)
         assert.exists(response.body)
-        assert.notProperty(response.body, 'exists')
+        chai.expect(response.body).to.be.empty
+    })
+
+    it("/emailIdForLogin/:appUserId - should return email when user is found", async function () {
+        let serviceExpectation = userServiceMock.expects('findUserByAppUserId').once().resolves({ result: 1, email: 'someEmail' })
+        const response = await request("http://localhost:3000")
+            .get("/user/emailIdForLogin/someAppUserId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation.getCall(0), sinon.match("someAppUserId"))
+        assert.equal(response.status, 200)
+        assert.exists(response.body)
+        assert.equal(response.body.email, 'someEmail')
+    })
+
+    it("/emailIdForLogin/:appUserId - should not return content when user is found", async function () {
+        let serviceExpectation = userServiceMock.expects('findUserByAppUserId').once().resolves({ result: 0, email: 'someEmail' })
+        const response = await request("http://localhost:3000")
+            .get("/user/emailIdForLogin/someAppUserId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation.getCall(0), sinon.match("someAppUserId"))
+        assert.equal(response.status, 204)
+        assert.exists(response.body)
+        chai.expect(response.body).to.be.empty
+    })
+
+    it("/emailIdForLogin/:appUserId - should not return content when service fails", async function () {
+        let serviceExpectation = userServiceMock.expects('findUserByAppUserId').once().rejects({ error: 'mock error' })
+        const response = await request("http://localhost:3000")
+            .get("/user/emailIdForLogin/someAppUserId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation.getCall(0), sinon.match("someAppUserId"))
+        assert.equal(response.status, 500)
+        assert.exists(response.body)
+        chai.expect(response.body).to.be.empty
     })
 
 })
