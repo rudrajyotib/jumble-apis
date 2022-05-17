@@ -7,9 +7,15 @@ const isValidChallenge = (inputData) => {
     return true
 }
 
+const isValidUserCreateRequest = (inputData) => {
+    if (!inputData.appUserId || '' === inputData.appUserId || inputData.appUserId.length < 5 || inputData.appUserId.length > 20 || !inputData.appUserId.match(alphaNumericRegex)) { return false }
+    return true
+}
+
 const validQuestionTypes = ['JUMBLE']
 
 const allCapsAlphaRegex = /^[A-Z]+$/;
+const alphaNumericRegex = /^[A-Za-z0-9]+$/;
 
 const isValidJumbleWord = (questionContent) => {
     if (!questionContent.word || (questionContent.word.length > 20 || (questionContent.word.length < 4))) { return false }
@@ -17,4 +23,4 @@ const isValidJumbleWord = (questionContent) => {
     return true
 }
 
-module.exports = { isValidChallenge }
+module.exports = { isValidChallenge, isValidUserCreateRequest }

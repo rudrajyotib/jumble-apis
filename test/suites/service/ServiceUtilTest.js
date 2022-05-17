@@ -63,4 +63,28 @@ describe("should test all the utilities", function () {
         assert.isTrue(serviceUtil.isValidChallenge({ sourceUserId: 'someSourceUserId', question: { type: 'JUMBLE', content: { word: 'ABCDE' } } }))
     })
 
+    it("should not validate user data if appUserData is not present", function () {
+        assert.isFalse(serviceUtil.isValidUserCreateRequest({ emaill: 'someEmail' }))
+    })
+
+    it("should not validate user data if appUserData is empty", function () {
+        assert.isFalse(serviceUtil.isValidUserCreateRequest({ emaill: '' }))
+    })
+
+    it("should not validate user data if appUserData is short", function () {
+        assert.isFalse(serviceUtil.isValidUserCreateRequest({ emaill: 'Aa1' }))
+    })
+
+    it("should not validate user data if appUserData is long", function () {
+        assert.isFalse(serviceUtil.isValidUserCreateRequest({ emaill: 'Aa1aa12hgshdyewtyghajgddafetgwevdvdg' }))
+    })
+
+    it("should not validate user data if appUserData contains special character", function () {
+        assert.isFalse(serviceUtil.isValidUserCreateRequest({ emaill: 'aaa !22 ' }))
+    })
+
+    it("should  validate user data  ", function () {
+        assert.isFalse(serviceUtil.isValidUserCreateRequest({ emaill: 'A1aA2aq1' }))
+    })
+
 })

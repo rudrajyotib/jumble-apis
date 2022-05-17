@@ -427,7 +427,7 @@ describe("should execute all user repository tests", function () {
         querySnapshotGetMockExpectation.once().resolves({
             empty: false,
             docs: [{
-                get: function () { return { email: 'someEmail' } }
+                data: function () { return { email: 'someEmail' } }
             }]
         })
         const userDetails = await userRepo.findUserByAppUserId("someAppUserId")
@@ -436,7 +436,7 @@ describe("should execute all user repository tests", function () {
         whereClauseExpectation.verify()
         querySnapshotGetMockExpectation.verify()
         sinon.assert.calledWith(firestoreSpy.getCall(0), 'users')
-        sinon.assert.calledWith(whereClauseExpectation.getCall(0), 'appUserId', '=', 'someAppUserId')
+        sinon.assert.calledWith(whereClauseExpectation.getCall(0), 'appUserId', '==', 'someAppUserId')
     })
 
     it("findUserByAppUserId: should report if user with app user ID not found", async function () {
@@ -450,7 +450,7 @@ describe("should execute all user repository tests", function () {
         whereClauseExpectation.verify()
         querySnapshotGetMockExpectation.verify()
         sinon.assert.calledWith(firestoreSpy.getCall(0), 'users')
-        sinon.assert.calledWith(whereClauseExpectation.getCall(0), 'appUserId', '=', 'someAppUserId')
+        sinon.assert.calledWith(whereClauseExpectation.getCall(0), 'appUserId', '==', 'someAppUserId')
     })
 
     it("findUserByAppUserId: should report if query execution promise fails", async function () {
@@ -464,7 +464,7 @@ describe("should execute all user repository tests", function () {
         whereClauseExpectation.verify()
         querySnapshotGetMockExpectation.verify()
         sinon.assert.calledWith(firestoreSpy.getCall(0), 'users')
-        sinon.assert.calledWith(whereClauseExpectation.getCall(0), 'appUserId', '=', 'someAppUserId')
+        sinon.assert.calledWith(whereClauseExpectation.getCall(0), 'appUserId', '==', 'someAppUserId')
     })
 
 

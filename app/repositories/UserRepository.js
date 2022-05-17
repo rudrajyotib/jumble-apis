@@ -29,12 +29,13 @@ var userRepository = {
     },
 
     findUserByAppUserId: async function (appUserId) {
-        const userData = await repository.collection("users")
-            .where("appUserId", "=", appUserId)
+        const userData = await repository
+            .collection("users")
+            .where('appUserId', '==', appUserId)
             .get()
             .then((querySnapshot) => {
                 if (querySnapshot.empty) { return { result: 0 } }
-                const user = querySnapshot.docs[0].get()
+                const user = querySnapshot.docs[0].data()
                 return { result: 1, email: user.email }
             })
             .catch((err) => { return { result: -1 } })

@@ -42,7 +42,6 @@ describe("should operate user operations", function () {
                 uid: "someProviderUid",
                 displayName: "someProviderDisplayName",
                 email: "someProviderEmail",
-                appUserId: 'someAppUserId',
                 providerId: "someProviderId"
             }]
         })
@@ -58,6 +57,7 @@ describe("should operate user operations", function () {
         userRepoAddUserExpectation.verify()
         onlineAuthenticatorExpectation.verify()
         userRepoSearchUserExpectation.verify()
+        sinon.assert.calledWith(userRepoSearchUserExpectation.getCall(0), sinon.match("someAppUserId"))
         assert.isTrue(onlineAuthenticatorExpectation.getCall(0).calledBefore(userRepoAddUserExpectation.getCall(0)))
         assert.isTrue(userRepoSearchUserExpectation.getCall(0).calledBefore(onlineAuthenticatorExpectation.getCall(0)))
         assert.equal(onlineAuthenticatorExpectation.getCall(0).args.length, 1)
@@ -91,7 +91,6 @@ describe("should operate user operations", function () {
                 uid: "someProviderUid",
                 displayName: "someProviderDisplayName",
                 email: "someProviderEmail",
-                appUserId: 'someAppUserId',
                 providerId: "someProviderId"
             }]
         })
@@ -107,6 +106,7 @@ describe("should operate user operations", function () {
         userRepoExpectation.verify()
         onlineAuthenticatorExpectation.verify()
         userRepoSearchUserExpectation.verify()
+        sinon.assert.calledWith(userRepoSearchUserExpectation.getCall(0), sinon.match("someAppUserId"))
         assert.isTrue(onlineAuthenticatorExpectation.getCall(0).calledBefore(userRepoExpectation.getCall(0)))
         assert.isTrue(userRepoSearchUserExpectation.getCall(0).calledBefore(onlineAuthenticatorExpectation.getCall(0)))
         assert.equal(onlineAuthenticatorExpectation.getCall(0).args.length, 1)
@@ -148,12 +148,14 @@ describe("should operate user operations", function () {
             email: 'someEmail',
             password: 'somePassword',
             displayName: 'someName',
+            appUserId: 'someAppUserId',
             disabled: false
         })
         // assert.equal('someId', challengeId)
         userRepoExpectation.verify()
         userRepoSearchUserExpectation.verify()
         onlineAuthenticatorExpectation.verify()
+        sinon.assert.calledWith(userRepoSearchUserExpectation.getCall(0), sinon.match("someAppUserId"))
         assert.isTrue(onlineAuthenticatorExpectation.getCall(0).calledBefore(userRepoExpectation.getCall(0)))
         assert.isTrue(userRepoSearchUserExpectation.getCall(0).calledBefore(onlineAuthenticatorExpectation.getCall(0)))
         assert.equal(onlineAuthenticatorExpectation.getCall(0).args.length, 1)
@@ -183,6 +185,7 @@ describe("should operate user operations", function () {
             email: 'someEmail',
             password: 'somePassword',
             displayName: 'someName',
+            appUserId: 'someAppUserId',
             disabled: false
         })
         // assert.equal('someId', challengeId)
@@ -190,6 +193,7 @@ describe("should operate user operations", function () {
         userRepoSearchUserExpectation.verify()
         onlineAuthenticatorExpectation.verify()
         assert.isTrue(userRepoSearchUserExpectation.getCall(0).calledBefore(onlineAuthenticatorExpectation.getCall(0)))
+        sinon.assert.calledWith(userRepoSearchUserExpectation.getCall(0), sinon.match("someAppUserId"))
         assert.equal(result.result, -1)
 
     })
@@ -202,12 +206,14 @@ describe("should operate user operations", function () {
             email: 'someEmail',
             password: 'somePassword',
             displayName: 'someName',
+            appUserId: 'someAppUserId',
             disabled: false
         })
         // assert.equal('someId', challengeId)
         userRepoExpectation.verify()
         userRepoSearchUserExpectation.verify()
         onlineAuthenticatorExpectation.verify()
+        sinon.assert.calledWith(userRepoSearchUserExpectation.getCall(0), sinon.match("someAppUserId"))
         assert.equal(result.result, -2)
 
     })
@@ -220,12 +226,14 @@ describe("should operate user operations", function () {
             email: 'someEmail',
             password: 'somePassword',
             displayName: 'someName',
+            appUserId: 'someAppUserId',
             disabled: false
         })
         // assert.equal('someId', challengeId)
         userRepoExpectation.verify()
         userRepoSearchUserExpectation.verify()
         onlineAuthenticatorExpectation.verify()
+        sinon.assert.calledWith(userRepoSearchUserExpectation.getCall(0), sinon.match("someAppUserId"))
         assert.equal(result.result, -1)
 
     })
@@ -238,14 +246,34 @@ describe("should operate user operations", function () {
             email: 'someEmail',
             password: 'somePassword',
             displayName: 'someName',
+            appUserId: 'someAppUserId',
             disabled: false
         })
         // assert.equal('someId', challengeId)
         userRepoExpectation.verify()
         userRepoSearchUserExpectation.verify()
         onlineAuthenticatorExpectation.verify()
+        sinon.assert.calledWith(userRepoSearchUserExpectation.getCall(0), sinon.match("someAppUserId"))
         assert.equal(result.result, -1)
 
+    })
+
+
+    it("addUser:should not attempt to add in user if user data is not valid", async function () {
+        const userRepoSearchUserExpectation = userRepositoryMock.expects('findUserByAppUserId').never()
+        const userRepoExpectation = userRepositoryMock.expects('addUser').never()
+        const onlineAuthenticatorExpectation = onlineUserRepositoryMock.expects('createUser').never()
+        const result = await userService.addUser({
+            email: 'someEmail',
+            password: 'somePassword',
+            displayName: 'someName',
+            disabled: false
+        })
+        // assert.equal('someId', challengeId)
+        userRepoExpectation.verify()
+        userRepoSearchUserExpectation.verify()
+        onlineAuthenticatorExpectation.verify()
+        assert.equal(result.result, -3)
     })
 
     it("should add users as friends", async function () {

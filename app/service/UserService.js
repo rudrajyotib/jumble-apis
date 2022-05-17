@@ -3,6 +3,7 @@ const challengeRepo = require('../repositories/ChallengeRepository')
 const onlineUserRepo = require('../repositories/OnlineUserRepository')
 const { v4: uuidv4 } = require('uuid')
 const challengeRepository = require('../repositories/ChallengeRepository')
+const serviceUtil = require('./util/ServiceUtil')
 
 
 const listFriendsWithStatus = async function (userId, status) {
@@ -15,6 +16,7 @@ const listFriendsWithStatus = async function (userId, status) {
 module.exports = {
 
     addUser: async function (data) {
+        if (!serviceUtil.isValidUserCreateRequest(data)) { return { result: -3 } }
         const appUserInSystemResult = await userRepo.findUserByAppUserId(data.appUserId).catch((err) => { return { result: -1 } })
         if (appUserInSystemResult.result === -1) { return { result: -1 } }
         if (appUserInSystemResult.result === 1) { return { result: -2 } }
@@ -31,14 +33,14 @@ module.exports = {
             userId: onlineUser.onlineUserData.uid,
             name: onlineUser.onlineUserData.displayName,
             email: onlineUser.onlineUserData.email,
-            appUserId: onlineUser.onlineUserData.appUserId
+            appUserId: data.appUserId
         })
             .then((data) => {
                 if (data.result === 0) { return { result: 1 } }
                 else { return { result: -1 } }
             })
             .catch((error) => {
-                console.log("Erorr in DataRepo::" + JSON.stringify(error))
+                console.log("Erorr in DataRepo::" + error)
                 return { result: -1 }
             })
         return userPersisted

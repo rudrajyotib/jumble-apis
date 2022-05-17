@@ -52,6 +52,8 @@ const signUp = async function (request, response, next) {
                 response.status(500).send("User not created")
             } else if (user.result == 1) {
                 response.status(200).send("User created")
+            } else if (user.result == -3) {
+                response.status(400).send("User request not valid")
             } else {
                 response.status(501).send("User not created")
             }
