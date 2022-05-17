@@ -45,7 +45,17 @@ const signUp = async function (request, response, next) {
     }
     await userService
         .addUser(validatedUserInput.userInput)
-        .then((user) => { response.status(200).send("User created Ok") })
+        .then((user) => {
+            if (user.result == -2) {
+                response.status(409).send("User exists")
+            } else if (user.result == -1) {
+                response.status(500).send("User not created")
+            } else if (user.result == 1) {
+                response.status(200).send("User created")
+            } else {
+                response.status(501).send("User not created")
+            }
+        })
         .catch((error) => { response.status(500).send("User not created") })
 }
 

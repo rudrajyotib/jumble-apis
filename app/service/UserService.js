@@ -15,6 +15,9 @@ const listFriendsWithStatus = async function (userId, status) {
 module.exports = {
 
     addUser: async function (data) {
+        const appUserInSystemResult = await userRepo.findUserByAppUserId(data.appUserId).catch((err) => { return { result: -1 } })
+        if (appUserInSystemResult.result === -1) { return { result: -1 } }
+        if (appUserInSystemResult.result === 1) { return { result: -2 } }
         const onlineUser = await onlineUserRepo
             .createUser(data)
             .then((userData) => {
@@ -23,7 +26,7 @@ module.exports = {
                 console.log("Erorr in AuthRepo::" + JSON.stringify(error))
                 return { created: false }
             })
-        if (!onlineUser.created) { return false }
+        if (!onlineUser.created) { return { result: -1 } }
         const userPersisted = await userRepo.addUser({
             userId: onlineUser.onlineUserData.uid,
             name: onlineUser.onlineUserData.displayName,
@@ -31,12 +34,12 @@ module.exports = {
             appUserId: onlineUser.onlineUserData.appUserId
         })
             .then((data) => {
-                if (data.result === 0) { return true }
-                else { return false }
+                if (data.result === 0) { return { result: 1 } }
+                else { return { result: -1 } }
             })
             .catch((error) => {
                 console.log("Erorr in DataRepo::" + JSON.stringify(error))
-                return false
+                return { result: -1 }
             })
         return userPersisted
     },

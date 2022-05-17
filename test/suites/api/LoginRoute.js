@@ -22,7 +22,7 @@ describe("should do service operations", function () {
     })
 
     it("should add User", async function () {
-        let expectation = userServiceMock.expects('addUser').once().resolves('someId')
+        let expectation = userServiceMock.expects('addUser').once().resolves({ result: 1 })
         const response = await request("http://localhost:3000")
             .post("/user/signup")
             .send({ name: "someName", email: "someEmail", password: "somePassword", appUserId: 'someAppUserId' })
@@ -37,7 +37,64 @@ describe("should do service operations", function () {
             return true
         }, "does not match"))
         assert.equal(response.status, 200)
-        assert.equal(response.text, "User created Ok")
+        assert.equal(response.text, "User created")
+    })
+
+    it("should report User if already exists", async function () {
+        let expectation = userServiceMock.expects('addUser').once().resolves({ result: -2 })
+        const response = await request("http://localhost:3000")
+            .post("/user/signup")
+            .send({ name: "someName", email: "someEmail", password: "somePassword", appUserId: 'someAppUserId' })
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation, sinon.match(function (actual) {
+            assert.equal(actual.displayName, 'someName')
+            assert.equal(actual.email, 'someEmail')
+            assert.equal(actual.password, 'somePassword')
+            assert.equal(actual.appUserId, 'someAppUserId')
+            return true
+        }, "does not match"))
+        assert.equal(response.status, 409)
+        assert.equal(response.text, "User exists")
+    })
+
+    it("should report User if service fails gracefully", async function () {
+        let expectation = userServiceMock.expects('addUser').once().resolves({ result: -1 })
+        const response = await request("http://localhost:3000")
+            .post("/user/signup")
+            .send({ name: "someName", email: "someEmail", password: "somePassword", appUserId: 'someAppUserId' })
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation, sinon.match(function (actual) {
+            assert.equal(actual.displayName, 'someName')
+            assert.equal(actual.email, 'someEmail')
+            assert.equal(actual.password, 'somePassword')
+            assert.equal(actual.appUserId, 'someAppUserId')
+            return true
+        }, "does not match"))
+        assert.equal(response.status, 500)
+        assert.equal(response.text, "User not created")
+    })
+
+    it("should report User if service returns unexpected code", async function () {
+        let expectation = userServiceMock.expects('addUser').once().resolves({ result: -3 })
+        const response = await request("http://localhost:3000")
+            .post("/user/signup")
+            .send({ name: "someName", email: "someEmail", password: "somePassword", appUserId: 'someAppUserId' })
+            .set('Accept', 'application/json')
+
+        expectation.verify()
+        sinon.assert.calledWith(expectation, sinon.match(function (actual) {
+            assert.equal(actual.displayName, 'someName')
+            assert.equal(actual.email, 'someEmail')
+            assert.equal(actual.password, 'somePassword')
+            assert.equal(actual.appUserId, 'someAppUserId')
+            return true
+        }, "does not match"))
+        assert.equal(response.status, 501)
+        assert.equal(response.text, "User not created")
     })
 
     it("should report when User input is not correct", async function () {
