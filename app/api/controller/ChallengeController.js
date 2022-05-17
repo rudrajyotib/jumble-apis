@@ -5,9 +5,7 @@ const addChallenge = async (req, res, next) => {
     if (challengeUtil.verifyCreateChallengeRequest(req)) {
         var body = req.body
         const inputObject = {}
-        inputObject.challenger = body.requestedBy
-        inputObject.targetUser = body.targetUser
-        inputObject.challengeDate = body.challengeDate
+        inputObject.sourceUserId = req.params.sourceUserId
         inputObject.question = body.question
         inputObject.duelId = req.params.duelId
         inputObject.duelEvent = 'challenge'

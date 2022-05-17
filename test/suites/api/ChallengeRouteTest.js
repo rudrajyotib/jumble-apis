@@ -25,15 +25,13 @@ describe("should do service operations", function () {
     it("addChallenge:should add challenge", async function () {
         let expectation = challengeServiceMock.expects('updateDuelData').once().resolves(true)
         const response = await request("http://localhost:3000")
-            .post("/challenge/addChallenge/someDuelId")
-            .send({ requestedBy: 'a7038', targetUser: 'a001', challengeDate: 'x-y-z', question: { type: 'jumble' } })
+            .post("/challenge/addChallenge/someDuelId/someSourceUserId")
+            .send({ question: { type: 'jumble', content: { word: 'WORD' } } })
             .set('Accept', 'application/json')
 
         expectation.verify()
         sinon.assert.calledWith(expectation, sinon.match(function (actual) {
-            assert.equal(actual.challenger, 'a7038')
-            assert.equal(actual.targetUser, 'a001')
-            assert.equal(actual.challengeDate, 'x-y-z')
+            assert.equal(actual.sourceUserId, 'someSourceUserId')
             assert.equal(actual.question.type, 'jumble')
             assert.equal(actual.duelId, 'someDuelId')
             assert.equal(actual.duelEvent, 'challenge')
@@ -45,15 +43,13 @@ describe("should do service operations", function () {
     it("addChallenge:should handle add challenge when service fails gracefully", async function () {
         let expectation = challengeServiceMock.expects('updateDuelData').once().resolves(false)
         const response = await request("http://localhost:3000")
-            .post("/challenge/addChallenge/someDuelId")
-            .send({ requestedBy: 'a7038', targetUser: 'a001', challengeDate: 'x-y-z', question: { type: 'jumble' } })
+            .post("/challenge/addChallenge/someDuelId/someSourceUserId")
+            .send({ question: { type: 'jumble', content: { word: 'WORD' } } })
             .set('Accept', 'application/json')
 
         expectation.verify()
         sinon.assert.calledWith(expectation, sinon.match(function (actual) {
-            assert.equal(actual.challenger, 'a7038')
-            assert.equal(actual.targetUser, 'a001')
-            assert.equal(actual.challengeDate, 'x-y-z')
+            assert.equal(actual.sourceUserId, 'someSourceUserId')
             assert.equal(actual.question.type, 'jumble')
             assert.equal(actual.duelId, 'someDuelId')
             assert.equal(actual.duelEvent, 'challenge')
@@ -65,15 +61,13 @@ describe("should do service operations", function () {
     it("addChallenge:should report internal server error when challenge persist fails", async function () {
         let expectation = challengeServiceMock.expects('updateDuelData').once().rejects('Service layer failure')
         const response = await request("http://localhost:3000")
-            .post("/challenge/addChallenge/someDuelId")
-            .send({ requestedBy: 'a7038', targetUser: 'a001', challengeDate: 'x-y-z', question: { type: 'jumble' } })
+            .post("/challenge/addChallenge/someDuelId/someSourceUserId")
+            .send({ question: { type: 'jumble', content: { word: 'WORD' } } })
             .set('Accept', 'application/json')
 
         expectation.verify()
         sinon.assert.calledWith(expectation, sinon.match(function (actual) {
-            assert.equal(actual.challenger, 'a7038')
-            assert.equal(actual.targetUser, 'a001')
-            assert.equal(actual.challengeDate, 'x-y-z')
+            assert.equal(actual.sourceUserId, 'someSourceUserId')
             assert.equal(actual.question.type, 'jumble')
             assert.equal(actual.duelId, 'someDuelId')
             assert.equal(actual.duelEvent, 'challenge')
@@ -86,8 +80,19 @@ describe("should do service operations", function () {
     it("addChallenge:should report invalid data when challenge data does not validate", async function () {
         let expectation = challengeServiceMock.expects('updateDuelData').never()
         const response = await request("http://localhost:3000")
-            .post("/challenge/addChallenge/someDuelId")
+            .post("/challenge/addChallenge/someDuelId/someSourceUserId")
             .send({ world: 'beautiful' })
+            .set('Accept', 'application/json')
+
+        assert.equal(response.status, 400)
+        assert.equal(response.text, "valid challenge data not found")
+    })
+
+    it("addChallenge:should report invalid data when body is empty", async function () {
+        let expectation = challengeServiceMock.expects('updateDuelData').never()
+        const response = await request("http://localhost:3000")
+            .post("/challenge/addChallenge/someDuelId/someSourceUserId")
+            .send()
             .set('Accept', 'application/json')
 
         assert.equal(response.status, 400)

@@ -1,5 +1,6 @@
 const challengeRepo = require('../repositories/ChallengeRepository')
 const userRepo = require('../repositories/UserRepository')
+const serviceUtil = require('./util/ServiceUtil')
 
 
 const challengeService = {
@@ -33,10 +34,12 @@ const challengeService = {
         if (!duelEvent || '' === duelEvent.trim()) { return false }
         const updateEvent = { duelId: duelId }
         if ('challenge' === duelEvent) {
-            const challenge = await challengeRepo.addChallenge(duelInput.challengeData).then((challengeId) => { return { result: true, challengeId: challengeId } }).catch(() => { return { result: false } })
+            challengeData = duelInput.challengeData
+            if (!serviceUtil.isValidChallenge(challengeData)) { return false }
+            const challenge = await challengeRepo.addChallenge(challengeData).then((challengeId) => { return { result: true, challengeId: challengeId } }).catch(() => { return { result: false } })
             if (!challenge.result) { return false }
             updateEvent.challengeId = challenge.challengeId
-            updateEvent.status = 'active'
+            updateEvent.status = 'pendingAction'
         } else if ('success' === duelEvent) {
             updateEvent.status = 'active'
             updateEvent.scoreUpdate = true

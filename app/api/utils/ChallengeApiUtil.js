@@ -1,15 +1,6 @@
 const verifyCreateChallengeRequest = (req) => {
-
-    if (!req.body) {
-        return false
-    }
-
-    var challenge = req.body
-
-    if (!challenge.requestedBy || !challenge.targetUser) {
-        return false
-    }
-
+    if (!req.body) { return false }
+    if (!req.body.question) { return false }
 
     return true
 }

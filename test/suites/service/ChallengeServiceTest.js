@@ -91,12 +91,19 @@ describe("challenge service test suite", function () {
         let duelUpdateExpectation = challengeRepositoryMock.expects('updateDuel')
         addChallenegeExpectation.once().resolves('someChallengeId')
         duelUpdateExpectation.once().resolves(true)
-        const result = await challengeService.updateDuelData({ duelId: 'someDuelId', duelEvent: 'challenge', challengeData: { challengeInput: 'someInput' } })
+        const result = await challengeService.updateDuelData({
+            duelId: 'someDuelId', duelEvent: 'challenge', challengeData: {
+                sourceUserId: 'someSource',
+                question: { type: 'JUMBLE', content: { word: 'ABCDE' } }
+            }
+        })
         assert.isTrue(result)
         duelUpdateExpectation.verify()
         addChallenegeExpectation.verify()
         sinon.assert.calledWith(addChallenegeExpectation.getCall(0), sinon.match((challengeInput) => {
-            assert.equal(challengeInput.challengeInput, 'someInput')
+            assert.equal(challengeInput.sourceUserId, 'someSource')
+            assert.equal(challengeInput.question.type, 'JUMBLE')
+            assert.equal(challengeInput.question.content.word, 'ABCDE')
             return true
         }))
         sinon.assert.calledWith(duelUpdateExpectation.getCall(0), sinon.match((updateDuelInput) => {
@@ -107,7 +114,7 @@ describe("challenge service test suite", function () {
             assert.notExists(updateDuelInput.roleChange)
             assert.equal(updateDuelInput.duelId, 'someDuelId')
             assert.equal(updateDuelInput.challengeId, 'someChallengeId')
-            assert.equal(updateDuelInput.status, 'active')
+            assert.equal(updateDuelInput.status, 'pendingAction')
             return true
         }))
     })
@@ -117,14 +124,37 @@ describe("challenge service test suite", function () {
         let duelUpdateExpectation = challengeRepositoryMock.expects('updateDuel')
         addChallenegeExpectation.once().rejects({ error: 'mock error' })
         duelUpdateExpectation.never()
-        const result = await challengeService.updateDuelData({ duelId: 'someDuelId', duelEvent: 'challenge', challengeData: { challengeInput: 'someInput' } })
+        const result = await challengeService.updateDuelData({
+            duelId: 'someDuelId', duelEvent: 'challenge', challengeData: {
+                sourceUserId: 'someSource',
+                question: { type: 'JUMBLE', content: { word: 'ABCDE' } }
+            }
+        })
         assert.isFalse(result)
         duelUpdateExpectation.verify()
         addChallenegeExpectation.verify()
         sinon.assert.calledWith(addChallenegeExpectation.getCall(0), sinon.match((challengeInput) => {
-            assert.equal(challengeInput.challengeInput, 'someInput')
+            assert.equal(challengeInput.sourceUserId, 'someSource')
+            assert.equal(challengeInput.question.type, 'JUMBLE')
+            assert.equal(challengeInput.question.content.word, 'ABCDE')
             return true
         }))
+    })
+
+    it("updateDuelData: should not update duel data if challenge creation input is not valid", async function () {
+        let addChallenegeExpectation = challengeRepositoryMock.expects('addChallenge')
+        let duelUpdateExpectation = challengeRepositoryMock.expects('updateDuel')
+        addChallenegeExpectation.never()
+        duelUpdateExpectation.never()
+        const result = await challengeService.updateDuelData({
+            duelId: 'someDuelId', duelEvent: 'challenge', challengeData: {
+                sourceUserId: 'someSource',
+                question: { type: 'JUMBLE', content: { word: 'ABCD1E' } }
+            }
+        })
+        assert.isFalse(result)
+        duelUpdateExpectation.verify()
+        addChallenegeExpectation.verify()
     })
 
     it("updateDuelData: should update duel when a duel is completed successfully", async function () {
