@@ -30,25 +30,29 @@ describe("should operate user operations", function () {
         challengeRepositoryMock.restore()
     })
 
-    it("should successfully add user to authenticator and repository", async function () {
-        let userRepoExpectation = userRepositoryMock.expects('addUser').once().resolves('someId')
+    it("addUser: should successfully add user to authenticator and repository", async function () {
+        let userRepoExpectation = userRepositoryMock.expects('addUser').once().resolves({ result: 0, userId: 'someUserId' })
         let onlineAuthenticatorExpectation = onlineUserRepositoryMock.expects('createUser').once().resolves({
             uid: "someUid",
             email: "someEmail",
             displayName: "someName",
+            appUserId: 'someAppUserId',
             providerData: [{
                 uid: "someProviderUid",
                 displayName: "someProviderDisplayName",
                 email: "someProviderEmail",
+                appUserId: 'someAppUserId',
                 providerId: "someProviderId"
             }]
         })
-        await userService.addUser({
+        const userCreateResult = await userService.addUser({
             email: 'someEmail',
             password: 'somePassword',
             displayName: 'someName',
+            appUserId: 'someAppUserId',
             disabled: false
         })
+        assert.isTrue(userCreateResult)
         // assert.equal('someId', challengeId)
         userRepoExpectation.verify()
         onlineAuthenticatorExpectation.verify()
@@ -58,6 +62,7 @@ describe("should operate user operations", function () {
             assert.equal(input.email, 'someEmail')
             assert.equal(input.password, 'somePassword')
             assert.equal(input.displayName, 'someName')
+            assert.equal(input.appUserId, 'someAppUserId')
             assert.equal(input.disabled, false)
             return true
         }))
@@ -66,31 +71,77 @@ describe("should operate user operations", function () {
             assert.equal(input.userId, 'someUid')
             assert.equal(input.email, 'someEmail')
             assert.equal(input.name, 'someName')
+            assert.equal(input.appUserId, 'someAppUserId')
             return true
         }))
     })
 
-    it("should throw error if insertion to database fails", async function () {
+    it("addUser: should report failure to add user to repo when repo fails gracefully", async function () {
+        let userRepoExpectation = userRepositoryMock.expects('addUser').once().resolves({ result: 1 })
+        let onlineAuthenticatorExpectation = onlineUserRepositoryMock.expects('createUser').once().resolves({
+            uid: "someUid",
+            email: "someEmail",
+            displayName: "someName",
+            appUserId: 'someAppUserId',
+            providerData: [{
+                uid: "someProviderUid",
+                displayName: "someProviderDisplayName",
+                email: "someProviderEmail",
+                appUserId: 'someAppUserId',
+                providerId: "someProviderId"
+            }]
+        })
+        const userCreateResult = await userService.addUser({
+            email: 'someEmail',
+            password: 'somePassword',
+            displayName: 'someName',
+            appUserId: 'someAppUserId',
+            disabled: false
+        })
+        assert.isFalse(userCreateResult)
+        // assert.equal('someId', challengeId)
+        userRepoExpectation.verify()
+        onlineAuthenticatorExpectation.verify()
+        assert.isTrue(onlineAuthenticatorExpectation.getCall(0).calledBefore(userRepoExpectation.getCall(0)))
+        assert.equal(onlineAuthenticatorExpectation.getCall(0).args.length, 1)
+        sinon.assert.match(onlineAuthenticatorExpectation.getCall(0).args[0], sinon.match((input) => {
+            assert.equal(input.email, 'someEmail')
+            assert.equal(input.password, 'somePassword')
+            assert.equal(input.displayName, 'someName')
+            assert.equal(input.appUserId, 'someAppUserId')
+            assert.equal(input.disabled, false)
+            return true
+        }))
+        assert.equal(userRepoExpectation.getCall(0).args.length, 1)
+        sinon.assert.match(userRepoExpectation.getCall(0).args[0], sinon.match((input) => {
+            assert.equal(input.userId, 'someUid')
+            assert.equal(input.email, 'someEmail')
+            assert.equal(input.name, 'someName')
+            assert.equal(input.appUserId, 'someAppUserId')
+            return true
+        }))
+    })
+
+    it("addUser:should return false if insertion to database fails", async function () {
         let userRepoExpectation = userRepositoryMock.expects('addUser').once().rejects('database error')
         let onlineAuthenticatorExpectation = onlineUserRepositoryMock.expects('createUser').once().resolves({
             uid: "someUid",
             email: "someEmail",
             displayName: "someName",
+            appUserId: 'someAppUserId',
             providerData: [{
                 uid: "someProviderUid",
                 displayName: "someProviderDisplayName",
                 email: "someProviderEmail",
+                appUserId: 'someAppUserId',
                 providerId: "someProviderId"
             }]
         })
-        let repoError
-        await userService.addUser({
+        const result = await userService.addUser({
             email: 'someEmail',
             password: 'somePassword',
             displayName: 'someName',
             disabled: false
-        }).catch((error) => {
-            repoError = error
         })
         // assert.equal('someId', challengeId)
         userRepoExpectation.verify()
@@ -111,26 +162,23 @@ describe("should operate user operations", function () {
             assert.equal(input.name, 'someName')
             return true
         }))
-        assert.isDefined(repoError)
+        assert.isFalse(result)
     })
 
 
-    it("should not attempt to add in user repo if online repo fails", async function () {
+    it("addUser:should not attempt to add in user repo if online repo fails", async function () {
         let userRepoExpectation = userRepositoryMock.expects('addUser').never()
         let onlineAuthenticatorExpectation = onlineUserRepositoryMock.expects('createUser').once().rejects("User exists")
-        let errorReceived
-        await userService.addUser({
+        const result = await userService.addUser({
             email: 'someEmail',
             password: 'somePassword',
             displayName: 'someName',
             disabled: false
-        }).catch((error) => {
-            errorReceived = error
         })
         // assert.equal('someId', challengeId)
         userRepoExpectation.verify()
         onlineAuthenticatorExpectation.verify()
-        assert.isDefined(errorReceived)
+        assert.isFalse(result)
 
     })
 
@@ -940,6 +988,25 @@ describe("should operate user operations", function () {
         challengeRepoDuelSearchExpectation.verify()
         sinon.assert.calledWith(userRepoFriendSearchExpectation.getCall(0), sinon.match('someSourceUserId'), sinon.match('someTargetUserId'))
         assert.isFalse(result)
+    })
+
+    it("findUserByAppUserId: should find user by appUserId", async function () {
+        let userRepoSearchExpectation = userRepositoryMock.expects('findUserByAppUserId')
+        userRepoSearchExpectation.once().resolves({ result: 1, email: 'someEmail' })
+        const result = await userService.findUserByAppUserId('someUserId')
+        assert.equal(result.result, 1)
+        assert.equal(result.email, 'someEmail')
+        userRepoSearchExpectation.verify()
+        sinon.assert.calledWith(userRepoSearchExpectation.getCall(0), sinon.match('someUserId'))
+    })
+
+    it("findUserByAppUserId: should return user not found when repo rejects", async function () {
+        let userRepoSearchExpectation = userRepositoryMock.expects('findUserByAppUserId')
+        userRepoSearchExpectation.once().rejects({ error: 'someError' })
+        const result = await userService.findUserByAppUserId('someUserId')
+        assert.equal(result.result, -1)
+        userRepoSearchExpectation.verify()
+        sinon.assert.calledWith(userRepoSearchExpectation.getCall(0), sinon.match('someUserId'))
     })
 
 

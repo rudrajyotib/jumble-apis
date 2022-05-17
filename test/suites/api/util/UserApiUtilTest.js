@@ -31,7 +31,8 @@ describe("should verify user api related  utility functions", function () {
             body: {
                 name: "",
                 email: "",
-                password: ""
+                password: "",
+                appUserId: ""
             }
         })
         assert.isDefined(validationResult)
@@ -44,7 +45,8 @@ describe("should verify user api related  utility functions", function () {
             body: {
                 name: "someName",
                 email: "someEmail",
-                password: "somePassword"
+                password: "somePassword",
+                appUserId: "someAppUserId"
             }
         })
         assert.isDefined(validationResult)
@@ -52,11 +54,13 @@ describe("should verify user api related  utility functions", function () {
         assert.exists(validationResult.userInput)
         assert.exists(validationResult.userInput.displayName)
         assert.exists(validationResult.userInput.email)
+        assert.exists(validationResult.userInput.appUserId)
         assert.exists(validationResult.userInput.password)
         assert.exists(validationResult.userInput.disabled)
         assert.equal(validationResult.userInput.displayName, "someName")
         assert.equal(validationResult.userInput.email, "someEmail")
         assert.equal(validationResult.userInput.password, "somePassword")
+        assert.equal(validationResult.userInput.appUserId, "someAppUserId")
         assert.isFalse(validationResult.userInput.disabled)
     })
 })

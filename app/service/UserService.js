@@ -15,14 +15,30 @@ const listFriendsWithStatus = async function (userId, status) {
 module.exports = {
 
     addUser: async function (data) {
-        const onlineUserData = await onlineUserRepo.createUser(data).catch((error) => {
-            console.log("Erorr in AuthRepo::" + JSON.stringify(error))
-            throw error
+        const onlineUser = await onlineUserRepo
+            .createUser(data)
+            .then((userData) => {
+                return { created: true, onlineUserData: userData }
+            }).catch((error) => {
+                console.log("Erorr in AuthRepo::" + JSON.stringify(error))
+                return { created: false }
+            })
+        if (!onlineUser.created) { return false }
+        const userPersisted = await userRepo.addUser({
+            userId: onlineUser.onlineUserData.uid,
+            name: onlineUser.onlineUserData.displayName,
+            email: onlineUser.onlineUserData.email,
+            appUserId: onlineUser.onlineUserData.appUserId
         })
-        await userRepo.addUser({ userId: onlineUserData.uid, name: onlineUserData.displayName, email: onlineUserData.email }).catch((error) => {
-            console.log("Erorr in DataRepo::" + JSON.stringify(error))
-            throw error
-        })
+            .then((data) => {
+                if (data.result === 0) { return true }
+                else { return false }
+            })
+            .catch((error) => {
+                console.log("Erorr in DataRepo::" + JSON.stringify(error))
+                return false
+            })
+        return userPersisted
     },
 
     addFriend: async function (data) {
@@ -92,6 +108,10 @@ module.exports = {
         const duelDetails = duelData.data
         if ('open' === duelDetails.status || ('active' === duelDetails.status && sourceUserId === duelDetails.sourceUserId)) { return true }
         return false
+    },
+
+    findUserByAppUserId: async function (appUserId) {
+        return await userRepo.findUserByAppUserId(appUserId).catch((err) => { return { result: -1 } })
     }
 }
 

@@ -421,4 +421,53 @@ describe("should do service operations", function () {
         assert.equal(response.body.challengeable, false)
     })
 
+    it("/userIdAvailable/:appUserId - should return available false if result code is 0", async function () {
+        let serviceExpectation = userServiceMock.expects('findUserByAppUserId').once().resolves({ result: 0 })
+        const response = await request("http://localhost:3000")
+            .get("/user//userIdAvailable/someAppUserId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation.getCall(0), sinon.match("someAppUserId"))
+        assert.equal(response.status, 200)
+        assert.exists(response.body)
+        assert.equal(response.body.exists, false)
+    })
+
+    it("/userIdAvailable/:appUserId - should return available true if result code is 1", async function () {
+        let serviceExpectation = userServiceMock.expects('findUserByAppUserId').once().resolves({ result: 1, email: 'someEmail' })
+        const response = await request("http://localhost:3000")
+            .get("/user//userIdAvailable/someAppUserId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation.getCall(0), sinon.match("someAppUserId"))
+        assert.equal(response.status, 200)
+        assert.exists(response.body)
+        assert.equal(response.body.exists, true)
+        assert.notProperty(response.body, "email")
+    })
+
+    it("/userIdAvailable/:appUserId - should return server error code false if result code is -1", async function () {
+        let serviceExpectation = userServiceMock.expects('findUserByAppUserId').once().resolves({ result: -1, email: 'someEmail' })
+        const response = await request("http://localhost:3000")
+            .get("/user//userIdAvailable/someAppUserId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation.getCall(0), sinon.match("someAppUserId"))
+        assert.equal(response.status, 500)
+        assert.exists(response.body)
+        assert.notProperty(response.body, 'exists')
+    })
+
+    it("/userIdAvailable/:appUserId - should return server error code false if service fails", async function () {
+        let serviceExpectation = userServiceMock.expects('findUserByAppUserId').once().rejects({ error: 'some error' })
+        const response = await request("http://localhost:3000")
+            .get("/user//userIdAvailable/someAppUserId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation.getCall(0), sinon.match("someAppUserId"))
+        assert.equal(response.status, 500)
+        assert.exists(response.body)
+        assert.notProperty(response.body, 'exists')
+    })
+
 })

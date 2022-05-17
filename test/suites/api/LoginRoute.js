@@ -25,7 +25,7 @@ describe("should do service operations", function () {
         let expectation = userServiceMock.expects('addUser').once().resolves('someId')
         const response = await request("http://localhost:3000")
             .post("/user/signup")
-            .send({ name: "someName", email: "someEmail", password: "somePassword" })
+            .send({ name: "someName", email: "someEmail", password: "somePassword", appUserId: 'someAppUserId' })
             .set('Accept', 'application/json')
 
         expectation.verify()
@@ -33,6 +33,7 @@ describe("should do service operations", function () {
             assert.equal(actual.displayName, 'someName')
             assert.equal(actual.email, 'someEmail')
             assert.equal(actual.password, 'somePassword')
+            assert.equal(actual.appUserId, 'someAppUserId')
             return true
         }, "does not match"))
         assert.equal(response.status, 200)

@@ -12,7 +12,8 @@ var userRepository = {
             .doc(userData.userId)
             .set({
                 name: userData.name,
-                email: userData.email
+                email: userData.email,
+                appUserId: userData.appUserId
             })
             .catch((err) => {
                 console.log("Error inserting data into Repo::" + JSON.stringify(err))
@@ -20,10 +21,26 @@ var userRepository = {
             })
 
         if (result == 0) {
-            return userData.userId
+            return { result: result, userId: userData.userId }
         }
-        throw new Error("User could not be added to repository")
+        else {
+            return { result: result }
+        }
     },
+
+    findUserByAppUserId: async function (appUserId) {
+        const userData = await repository.collection("users")
+            .where("appUserId", "=", appUserId)
+            .get()
+            .then((querySnapshot) => {
+                if (querySnapshot.empty) { return { result: 0 } }
+                const user = querySnapshot.docs[0].get()
+                return { result: 1, email: user.email }
+            })
+            .catch((err) => { return { result: -1 } })
+        return userData
+    },
+
 
     getUser: async function (userId) {
         try {

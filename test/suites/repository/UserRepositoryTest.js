@@ -39,7 +39,7 @@ describe("should execute all user repository tests", function () {
         querySnapshotMock.restore()
     })
 
-    it('should add user', async function () {
+    it('addUser: should add user', async function () {
         let expectation = documentDataMock.expects('set').once().resolves()
         await userRepo.addUser({ place: 'hell', name: 'someName', email: 'someEmail' })
         expectation.verify()
@@ -52,15 +52,12 @@ describe("should execute all user repository tests", function () {
         assert(firestoreGetCollectionSpy.calledOnce)
     })
 
-    it('should handle failure to add user', async function () {
-        let expectation = documentDataMock.expects('set').once().rejects(new Error('could not add challenge'))
-        let err
-        try {
-            await userRepo.addUser({ place: 'hell' })
-        } catch (error) {
-            err = error
-        }
-        assert.equal('User could not be added to repository', err.message)
+    it('addUser: should handle failure to add user', async function () {
+        const expectation = documentDataMock.expects('set').once().rejects(new Error('could not add challenge'))
+
+        const result = await userRepo.addUser({ place: 'hell' })
+
+        assert.equal(result.result, 1)
         expectation.verify()
     })
 
@@ -422,6 +419,52 @@ describe("should execute all user repository tests", function () {
         assert.isFalse(friendDetails.found)
         assert.notProperty(friendDetails, 'status')
         assert.notProperty(friendDetails, 'duelId')
+    })
+
+    it("findUserByAppUserId: should find user data from appUserId", async function () {
+        const whereClauseExpectation = firestoreCollectionMock.expects('where').once().returns(firebaseSetup.querySnapshot)
+        const querySnapshotGetMockExpectation = querySnapshotMock.expects('get')
+        querySnapshotGetMockExpectation.once().resolves({
+            empty: false,
+            docs: [{
+                get: function () { return { email: 'someEmail' } }
+            }]
+        })
+        const userDetails = await userRepo.findUserByAppUserId("someAppUserId")
+        assert.equal(userDetails.result, 1)
+        assert.equal(userDetails.email, 'someEmail')
+        whereClauseExpectation.verify()
+        querySnapshotGetMockExpectation.verify()
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'users')
+        sinon.assert.calledWith(whereClauseExpectation.getCall(0), 'appUserId', '=', 'someAppUserId')
+    })
+
+    it("findUserByAppUserId: should report if user with app user ID not found", async function () {
+        const whereClauseExpectation = firestoreCollectionMock.expects('where').once().returns(firebaseSetup.querySnapshot)
+        const querySnapshotGetMockExpectation = querySnapshotMock.expects('get')
+        querySnapshotGetMockExpectation.once().resolves({
+            empty: true
+        })
+        const userDetails = await userRepo.findUserByAppUserId("someAppUserId")
+        assert.equal(userDetails.result, 0)
+        whereClauseExpectation.verify()
+        querySnapshotGetMockExpectation.verify()
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'users')
+        sinon.assert.calledWith(whereClauseExpectation.getCall(0), 'appUserId', '=', 'someAppUserId')
+    })
+
+    it("findUserByAppUserId: should report if query execution promise fails", async function () {
+        const whereClauseExpectation = firestoreCollectionMock.expects('where').once().returns(firebaseSetup.querySnapshot)
+        const querySnapshotGetMockExpectation = querySnapshotMock.expects('get')
+        querySnapshotGetMockExpectation.once().rejects({
+            error: 'mock error'
+        })
+        const userDetails = await userRepo.findUserByAppUserId("someAppUserId")
+        assert.equal(userDetails.result, -1)
+        whereClauseExpectation.verify()
+        querySnapshotGetMockExpectation.verify()
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'users')
+        sinon.assert.calledWith(whereClauseExpectation.getCall(0), 'appUserId', '=', 'someAppUserId')
     })
 
 

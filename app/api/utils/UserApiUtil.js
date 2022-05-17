@@ -8,7 +8,7 @@ const validateAndConvertUserCreateRequest = (req) => {
         }
     }
     var user = req.body
-    if (!user.email || !user.name || !user.password || user.email === "" || user.name === "" || user.password === "") {
+    if (!user.email || !user.name || !user.password || user.email === "" || user.name === "" || user.password === "" || "" === user.appUserId) {
         return {
             valid: false
         }
@@ -19,6 +19,7 @@ const validateAndConvertUserCreateRequest = (req) => {
             email: user.email,
             displayName: user.name,
             password: user.password,
+            appUserId: user.appUserId,
             disabled: false
         }
     }

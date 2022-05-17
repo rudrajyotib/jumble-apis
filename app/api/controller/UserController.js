@@ -49,6 +49,14 @@ const signUp = async function (request, response, next) {
         .catch((error) => { response.status(500).send("User not created") })
 }
 
+const appUserIdAvailable = async function (request, response, next) {
+    const appUserId = request.params.appUserId
+    const user = await userService.findUserByAppUserId(appUserId).catch((err) => { return { result: -1 } })
+    if (user.result == 0) { response.status(200).send({ exists: false }) }
+    else if (user.result == 1) { response.status(200).send({ exists: true }) }
+    else { response.status(500).send() }
+}
+
 const listFriends = async function (request, response, next) {
     await searchFriendsByStatus(request, response, 'confirmed')
 }
@@ -72,7 +80,7 @@ const isChallengeable = async function (request, response, next) {
 }
 
 
-module.exports = { signUp, addFriend, isFriend, confirmFriend, listFriends, listPendingFriendRequests, isChallengeable }
+module.exports = { signUp, addFriend, isFriend, confirmFriend, listFriends, listPendingFriendRequests, isChallengeable, appUserIdAvailable }
 
 async function searchFriendsByStatus(request, response, status) {
     const userId = request.params.userId
