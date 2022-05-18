@@ -1,4 +1,3 @@
-const { use } = require('chai')
 const sourceRepo = require('../infra/DataSource')
 
 const repository = sourceRepo.repository
