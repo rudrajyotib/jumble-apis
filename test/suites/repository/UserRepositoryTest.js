@@ -288,14 +288,14 @@ describe("should execute all user repository tests", function () {
         }))
     })
 
-    it("should query friends with status and return a list with success code", async function () {
+    it("friendsWithStatus:should query friends with status and return a list with success code", async function () {
         let documentDataCollectionMockExpectation = documentDataMock.expects('collection')
         let querySnapshotGetMockExpectation = querySnapshotMock.expects('get')
         let sinonMockWhereExpectation = firestoreCollectionMock.expects('where').once().returns(firebaseSetup.querySnapshot)
         documentDataCollectionMockExpectation.once().returns(firestoreCollection)
         querySnapshotGetMockExpectation.once().resolves([
-            { id: 1, data: function () { return { name: 'nameOfOne' } } },
-            { id: 2, data: function () { return { name: 'nameOfTwo' } } }
+            { id: 1, data: function () { return { name: 'nameOfOne', duelId: 'd1' } } },
+            { id: 2, data: function () { return { name: 'nameOfTwo', duelId: 'd2' } } }
         ])
         const result = await userRepo.friendsWithStatus({
             sourceUserId: 'sourceUser',
@@ -313,16 +313,18 @@ describe("should execute all user repository tests", function () {
         sinon.assert.match(result.friends[0], sinon.match((friend) => {
             assert.equal(friend.id, 1)
             assert.equal(friend.name, 'nameOfOne')
+            assert.equal(friend.duelId, 'd1')
             return true
         }))
         sinon.assert.match(result.friends[1], sinon.match((friend) => {
             assert.equal(friend.id, 2)
             assert.equal(friend.name, 'nameOfTwo')
+            assert.equal(friend.duelId, 'd2')
             return true
         }))
     })
 
-    it("should query friends with status and return a blank list of friends", async function () {
+    it("friendsWithStatus:should query friends with status and return a blank list of friends", async function () {
         let documentDataCollectionMockExpectation = documentDataMock.expects('collection')
         let querySnapshotGetMockExpectation = querySnapshotMock.expects('get')
         let sinonMockWhereExpectation = firestoreCollectionMock.expects('where').once().returns(firebaseSetup.querySnapshot)
@@ -343,7 +345,7 @@ describe("should execute all user repository tests", function () {
         assert.equal(result.friends.length, 0)
     })
 
-    it("should handle errors in query", async function () {
+    it("friendsWithStatus:should handle errors in query", async function () {
         let documentDataCollectionMockExpectation = documentDataMock.expects('collection')
         let sinonMockWhereExpectation = firestoreCollectionMock.expects('where').once().returns(firebaseSetup.querySnapshot)
         let querySnapshotGetMockExpectation = querySnapshotMock.expects('get')

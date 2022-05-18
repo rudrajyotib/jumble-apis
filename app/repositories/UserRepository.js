@@ -123,7 +123,8 @@ var userRepository = {
                 querySnapshot.forEach((doc) => {
                     result.friends.push({
                         id: doc.id,
-                        name: doc.data().name
+                        name: doc.data().name,
+                        duelId: doc.data().duelId
                     })
                 })
             })
