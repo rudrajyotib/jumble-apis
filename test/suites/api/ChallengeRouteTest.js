@@ -31,8 +31,11 @@ describe("should do service operations", function () {
 
         expectation.verify()
         sinon.assert.calledWith(expectation, sinon.match(function (actual) {
-            assert.equal(actual.sourceUserId, 'someSourceUserId')
-            assert.equal(actual.question.type, 'jumble')
+            assert.exists(actual.challengeData)
+            assert.equal(actual.challengeData.sourceUserId, 'someSourceUserId')
+            assert.notProperty(actual, 'sourceUserId')
+            assert.equal(actual.challengeData.question.type, 'jumble')
+            assert.equal(actual.challengeData.question.content.word, 'WORD')
             assert.equal(actual.duelId, 'someDuelId')
             assert.equal(actual.duelEvent, 'challenge')
             return true
@@ -49,8 +52,8 @@ describe("should do service operations", function () {
 
         expectation.verify()
         sinon.assert.calledWith(expectation, sinon.match(function (actual) {
-            assert.equal(actual.sourceUserId, 'someSourceUserId')
-            assert.equal(actual.question.type, 'jumble')
+            assert.equal(actual.challengeData.sourceUserId, 'someSourceUserId')
+            assert.equal(actual.challengeData.question.type, 'jumble')
             assert.equal(actual.duelId, 'someDuelId')
             assert.equal(actual.duelEvent, 'challenge')
             return true
@@ -67,8 +70,8 @@ describe("should do service operations", function () {
 
         expectation.verify()
         sinon.assert.calledWith(expectation, sinon.match(function (actual) {
-            assert.equal(actual.sourceUserId, 'someSourceUserId')
-            assert.equal(actual.question.type, 'jumble')
+            assert.equal(actual.challengeData.sourceUserId, 'someSourceUserId')
+            assert.equal(actual.challengeData.question.type, 'jumble')
             assert.equal(actual.duelId, 'someDuelId')
             assert.equal(actual.duelEvent, 'challenge')
             return true

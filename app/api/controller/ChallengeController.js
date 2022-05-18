@@ -5,14 +5,18 @@ const addChallenge = async (req, res, next) => {
     if (challengeUtil.verifyCreateChallengeRequest(req)) {
         var body = req.body
         const inputObject = {}
-        inputObject.sourceUserId = req.params.sourceUserId
-        inputObject.question = body.question
+        // inputObject.sourceUserId = req.params.sourceUserId
+        // inputObject.question = body.question
         inputObject.duelId = req.params.duelId
         inputObject.duelEvent = 'challenge'
+        inputObject.challengeData = { question: body.question, sourceUserId: req.params.sourceUserId }
         await challengeService
             .updateDuelData(inputObject)
             .then((result) => { if (result) { res.status(204).send() } else { res.status(400).send() } })
-            .catch(() => { res.status(500).send() })
+            .catch((err) => {
+                console.log("error adding challenge::" + err)
+                res.status(500).send()
+            })
     } else {
         res.status(400).send("valid challenge data not found")
     }
