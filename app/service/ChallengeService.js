@@ -44,11 +44,14 @@ const challengeService = {
             updateEvent.status = 'active'
             updateEvent.scoreUpdate = true
             updateEvent.roleChange = true
+            updateEvent.preCondition = 'inProgress'
         } else if ('failure' === duelEvent) {
             updateEvent.status = 'active'
             updateEvent.roleChange = true
+            updateEvent.preCondition = 'inProgress'
         } else if ('attempt' === duelEvent) {
             updateEvent.status = 'inProgress'
+            updateEvent.preCondition = 'pendingAction'
         }
         const updateResult = await challengeRepo.updateDuel(updateEvent).catch(() => { return false })
         return updateResult

@@ -176,6 +176,8 @@ describe("challenge service test suite", function () {
             assert.equal(updateDuelInput.status, 'active')
             assert.isTrue(updateDuelInput.scoreUpdate)
             assert.isTrue(updateDuelInput.roleChange)
+            assert.exists(updateDuelInput.preCondition)
+            assert.equal(updateDuelInput.preCondition, 'inProgress')
             return true
         }))
     })
@@ -199,6 +201,8 @@ describe("challenge service test suite", function () {
             assert.equal(updateDuelInput.status, 'active')
             // assert.isTrue(updateDuelInput.scoreUpdate)
             assert.isTrue(updateDuelInput.roleChange)
+            assert.exists(updateDuelInput.preCondition)
+            assert.equal(updateDuelInput.preCondition, 'inProgress')
             return true
         }))
     })
@@ -222,6 +226,8 @@ describe("challenge service test suite", function () {
             assert.equal(updateDuelInput.status, 'inProgress')
             // assert.isTrue(updateDuelInput.scoreUpdate)
             // assert.isTrue(updateDuelInput.roleChange)
+            assert.exists(updateDuelInput.preCondition)
+            assert.equal(updateDuelInput.preCondition, 'pendingAction')
             return true
         }))
     })
@@ -245,6 +251,8 @@ describe("challenge service test suite", function () {
             assert.equal(updateDuelInput.status, 'inProgress')
             // assert.isTrue(updateDuelInput.scoreUpdate)
             // assert.isTrue(updateDuelInput.roleChange)
+            assert.exists(updateDuelInput.preCondition)
+            assert.equal(updateDuelInput.preCondition, 'pendingAction')
             return true
         }))
     })

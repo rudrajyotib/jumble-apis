@@ -26,6 +26,7 @@ var challengeRepository = {
         let duelDoc = await duelDocReference.get()
         if (!duelDoc.exists) { return false }
         duelPersistedData = (await duelDoc).data()
+        if (duelUpdate.preCondition && duelPersistedData.duelStatus != duelUpdate.preCondition) { return false }
         const duelDataUpdate = {}
         if (duelUpdate.status && '' != duelUpdate.status) { duelDataUpdate.duelStatus = duelUpdate.status }
         if (duelUpdate.scoreUpdate) {
