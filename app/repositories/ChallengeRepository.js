@@ -38,6 +38,20 @@ var challengeRepository = {
             duelDataUpdate.targetUserId = duelPersistedData.sourceUserId
         }
         if (duelUpdate.challengeId && '' != duelUpdate.challengeId) {
+            if ('open' === duelPersistedData.duelStatus) {
+                if ((duelUpdate.userId != duelPersistedData.sourceUserId)) {
+                    if (duelUpdate.userId === duelPersistedData.targetUserId) {
+                        duelDataUpdate.sourceUserId = duelPersistedData.targetUserId
+                        duelDataUpdate.targetUserId = duelPersistedData.sourceUserId
+                    } else {
+                        return false
+                    }
+                }
+            } else {
+                if ((duelUpdate.userId != duelPersistedData.sourceUserId)) {
+                    return false
+                }
+            }
             duelDataUpdate.challengeId = duelUpdate.challengeId
         }
         const updateResult = await duelDocReference.update(duelDataUpdate).then(() => { return true }).catch(() => { return false })

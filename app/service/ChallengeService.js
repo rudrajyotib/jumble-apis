@@ -40,6 +40,7 @@ const challengeService = {
             if (!challenge.result) { return false }
             updateEvent.challengeId = challenge.challengeId
             updateEvent.status = 'pendingAction'
+            updateEvent.userId = duelInput.challengeData.sourceUserId
         } else if ('success' === duelEvent) {
             updateEvent.status = 'active'
             updateEvent.scoreUpdate = true

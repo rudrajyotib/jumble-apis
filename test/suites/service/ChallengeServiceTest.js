@@ -77,6 +77,7 @@ describe("challenge service test suite", function () {
 
     })
 
+
     it("getDuelData:should handle brute repo error when getting duel data", async function () {
         let getDuelDataExpectation = challengeRepositoryMock.expects('getDuel').once().rejects({ error: 'mock error' })
         const duelDataResponse = await challengeService.getDuelData('someDuelId')
@@ -113,6 +114,7 @@ describe("challenge service test suite", function () {
             assert.notExists(updateDuelInput.scoreUpdate)
             assert.notExists(updateDuelInput.roleChange)
             assert.equal(updateDuelInput.duelId, 'someDuelId')
+            assert.equal(updateDuelInput.userId, 'someSource')
             assert.equal(updateDuelInput.challengeId, 'someChallengeId')
             assert.equal(updateDuelInput.status, 'pendingAction')
             return true
