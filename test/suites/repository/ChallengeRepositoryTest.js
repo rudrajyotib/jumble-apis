@@ -239,11 +239,12 @@ describe("should execute all challenge repository tests", function () {
                     sourceUserId: 'someSourceId',
                     targetUserId: 'someTargetId',
                     score: initialScore,
-                    duelStatus: 'open'
+                    duelStatus: 'open',
+                    challengeId: 'c1'
                 }
             }
         })
-        updateDuelExpectation.once().resolves()
+        updateDuelExpectation.twice().resolves()
         const updateResult = await challengeRepo.updateDuel({
             status: 'active',
             // scoreUpdate: true,
@@ -252,12 +253,14 @@ describe("should execute all challenge repository tests", function () {
             duelId: 'someDuelId'
         })
         assert.isTrue(updateResult)
-        assert(firestoreSpy.calledOnce)
-        assert(firestoreCollectionSpy.calledOnce)
+        assert(firestoreSpy.calledTwice)
+        assert(firestoreCollectionSpy.calledTwice)
         updateDuelExpectation.verify()
         getDuelExpectation.verify()
         sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someDuelId')
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(1), 'c1')
         sinon.assert.calledWith(firestoreSpy.getCall(0), 'duel')
+        sinon.assert.calledWith(firestoreSpy.getCall(1), 'challenges')
         sinon.assert.calledWith(updateDuelExpectation.getCall(0), sinon.match((updateInput) => {
             assert.exists(updateInput.duelStatus)
             assert.notProperty(updateInput, 'sourceUserId')
@@ -270,6 +273,10 @@ describe("should execute all challenge repository tests", function () {
             // assert.equal(updateInput.challengeId, 'c1')
             // assert.equal(updateInput.score['someSourceId'], 4)
             // assert.equal(updateInput.score['someTargetId'], 9)
+            return true
+        }))
+        sinon.assert.calledWith(updateDuelExpectation.getCall(1), sinon.match((updateEvent) => {
+            assert.equal(updateEvent.challengeStatus, 'active')
             return true
         }))
     })

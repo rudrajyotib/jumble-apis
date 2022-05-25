@@ -38,6 +38,7 @@ describe("should do service operations", function () {
             assert.equal(actual.challengeData.question.content.word, 'WORD')
             assert.equal(actual.duelId, 'someDuelId')
             assert.equal(actual.duelEvent, 'challenge')
+            assert.equal(actual.challengeStatus, 'open')
             return true
         }, "does not match"))
         assert.equal(response.status, 204)

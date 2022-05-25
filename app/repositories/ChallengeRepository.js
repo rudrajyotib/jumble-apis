@@ -20,7 +20,12 @@ var challengeRepository = {
         throw new Error("challenge not created")
     },
 
+    updateChallengeStatus: async function (challengeId, updatedChallengeStatus) {
+        repository.collection("challenges").doc(challengeId).update({ challengeStatus: updatedChallengeStatus })
+    },
+
     updateDuel: async function (duelUpdate) {
+        let updateChallengeStatus = false
         if (!duelUpdate.duelId || '' === duelUpdate.duelId) { return false }
         let duelDocReference = await repository.collection("duel").doc(duelUpdate.duelId)
         let duelDoc = await duelDocReference.get()
@@ -28,7 +33,10 @@ var challengeRepository = {
         duelPersistedData = (await duelDoc).data()
         if (duelUpdate.preCondition && duelPersistedData.duelStatus != duelUpdate.preCondition) { return false }
         const duelDataUpdate = {}
-        if (duelUpdate.status && '' != duelUpdate.status) { duelDataUpdate.duelStatus = duelUpdate.status }
+        if (duelUpdate.status && '' != duelUpdate.status) {
+            duelDataUpdate.duelStatus = duelUpdate.status
+            updateChallengeStatus = true
+        }
         if (duelUpdate.scoreUpdate) {
             duelDataUpdate.score = duelPersistedData.score
             duelDataUpdate.score[duelPersistedData.targetUserId] += 1
@@ -55,6 +63,9 @@ var challengeRepository = {
             duelDataUpdate.challengeId = duelUpdate.challengeId
         }
         const updateResult = await duelDocReference.update(duelDataUpdate).then(() => { return true }).catch(() => { return false })
+        if (updateResult && updateChallengeStatus && duelPersistedData.challengeId && '' != duelPersistedData.challengeId) {
+            this.updateChallengeStatus(duelPersistedData.challengeId, duelDataUpdate.duelStatus)
+        }
         return updateResult
     },
 

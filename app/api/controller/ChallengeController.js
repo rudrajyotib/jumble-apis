@@ -9,6 +9,7 @@ const addChallenge = async (req, res, next) => {
         // inputObject.question = body.question
         inputObject.duelId = req.params.duelId
         inputObject.duelEvent = 'challenge'
+        inputObject.challengeStatus = 'open'
         inputObject.challengeData = { question: body.question, sourceUserId: req.params.sourceUserId }
         await challengeService
             .updateDuelData(inputObject)
