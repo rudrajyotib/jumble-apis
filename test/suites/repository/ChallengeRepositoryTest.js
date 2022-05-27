@@ -226,7 +226,7 @@ describe("should execute all challenge repository tests", function () {
 
     })
 
-    it('updateDuel:should should update only status', async function () {
+    it('updateDuel:should update only status', async function () {
         const getDuelExpectation = documentDataMock.expects('get')
         const updateDuelExpectation = documentDataMock.expects('update')
         initialScore = {}
@@ -252,6 +252,65 @@ describe("should execute all challenge repository tests", function () {
             // challengeId: 'c1',
             duelId: 'someDuelId'
         })
+        assert.isTrue(updateResult)
+        assert(firestoreSpy.calledTwice)
+        assert(firestoreCollectionSpy.calledTwice)
+        updateDuelExpectation.verify()
+        getDuelExpectation.verify()
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(0), 'someDuelId')
+        sinon.assert.calledWith(firestoreCollectionSpy.getCall(1), 'c1')
+        sinon.assert.calledWith(firestoreSpy.getCall(0), 'duel')
+        sinon.assert.calledWith(firestoreSpy.getCall(1), 'challenges')
+        sinon.assert.calledWith(updateDuelExpectation.getCall(0), sinon.match((updateInput) => {
+            assert.exists(updateInput.duelStatus)
+            assert.notProperty(updateInput, 'sourceUserId')
+            assert.notProperty(updateInput, 'targetUserId')
+            assert.notProperty(updateInput, 'challengeId')
+            assert.notProperty(updateInput, 'score')
+            assert.equal(updateInput.duelStatus, 'active')
+            // assert.equal(updateInput.sourceUserId, 'someTargetId')
+            // assert.equal(updateInput.targetUserId, 'someSourceId')
+            // assert.equal(updateInput.challengeId, 'c1')
+            // assert.equal(updateInput.score['someSourceId'], 4)
+            // assert.equal(updateInput.score['someTargetId'], 9)
+            return true
+        }))
+        sinon.assert.calledWith(updateDuelExpectation.getCall(1), sinon.match((updateEvent) => {
+            assert.equal(updateEvent.challengeStatus, 'active')
+            return true
+        }))
+    })
+
+    it('updateDuel:should handle failure updating challenge status', async function () {
+        const getDuelExpectation = documentDataMock.expects('get')
+        const updateDuelExpectation = documentDataMock.expects('update')
+        initialScore = {}
+        initialScore['someSourceId'] = 4
+        initialScore['someTargetId'] = 8
+        getDuelExpectation.once().resolves({
+            exists: true,
+            data: function () {
+                return {
+                    sourceUserId: 'someSourceId',
+                    targetUserId: 'someTargetId',
+                    score: initialScore,
+                    duelStatus: 'open',
+                    challengeId: 'c1'
+                }
+            }
+        })
+        updateDuelExpectation.twice()
+        updateDuelExpectation.onCall(0).resolves()
+        updateDuelExpectation.onCall(1).throws("some stupid error")
+        var error = false
+        const updateResult = await challengeRepo.updateDuel({
+            status: 'active',
+            // scoreUpdate: true,
+            // roleChange: true,
+            // challengeId: 'c1',
+            duelId: 'someDuelId'
+        }).catch((err) => { console.log('error updating challenge' + err); error = true })
+        assert.isFalse(error)
         assert.isTrue(updateResult)
         assert(firestoreSpy.calledTwice)
         assert(firestoreCollectionSpy.calledTwice)

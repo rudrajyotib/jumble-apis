@@ -21,7 +21,7 @@ var challengeRepository = {
     },
 
     updateChallengeStatus: async function (challengeId, updatedChallengeStatus) {
-        repository.collection("challenges").doc(challengeId).update({ challengeStatus: updatedChallengeStatus })
+        repository.collection("challenges").doc(challengeId).update({ challengeStatus: updatedChallengeStatus }).catch((err) => { console.log("error updating challenge" + err) })
     },
 
     updateDuel: async function (duelUpdate) {
@@ -65,6 +65,7 @@ var challengeRepository = {
         const updateResult = await duelDocReference.update(duelDataUpdate).then(() => { return true }).catch(() => { return false })
         if (updateResult && updateChallengeStatus && duelPersistedData.challengeId && '' != duelPersistedData.challengeId) {
             this.updateChallengeStatus(duelPersistedData.challengeId, duelDataUpdate.duelStatus)
+                .catch((err) => console.log('error updating challenge status ignored' + err))
         }
         return updateResult
     },

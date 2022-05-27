@@ -10,7 +10,7 @@ const addChallenge = async (req, res, next) => {
         inputObject.duelId = req.params.duelId
         inputObject.duelEvent = 'challenge'
         inputObject.challengeStatus = 'open'
-        inputObject.challengeData = { question: body.question, sourceUserId: req.params.sourceUserId }
+        inputObject.challengeData = { question: body.question, challengeStatus: 'open', sourceUserId: req.params.sourceUserId }
         await challengeService
             .updateDuelData(inputObject)
             .then((result) => { if (result) { res.status(204).send() } else { res.status(400).send() } })
