@@ -99,10 +99,31 @@ const isChallengeable = async function (request, response, next) {
         })
 }
 
+const friendshipScoreWithChallengeState = async function (request, response, next) {
+    await userService.getFriendshipDetailsForChallenge(request.params.sourceUserId, request.params.targetUserId)
+        .then((friendshipData) => {
+            if (friendshipData.isFriend === false) {
+                response.status(400).send("not a friend")
+            } else {
+                response.status(200).send(
+                    {
+                        challengeable: friendshipData.challengeable,
+                        sourceUserScore: friendshipData.sourceUserScore,
+                        targetUserScore: friendshipData.targetUserScore
+                    }
+                )
+            }
+        })
+        .catch((error) => {
+            response.status(400).send("not a friend")
+        })
+}
+
 
 module.exports = {
     signUp, addFriend, isFriend, confirmFriend,
-    listFriends, listPendingFriendRequests, isChallengeable, appUserIdAvailable, getEmailIdFromAppUserId
+    listFriends, listPendingFriendRequests, isChallengeable, appUserIdAvailable, getEmailIdFromAppUserId,
+    friendshipScoreWithChallengeState
 }
 
 async function searchFriendsByStatus(request, response, status) {

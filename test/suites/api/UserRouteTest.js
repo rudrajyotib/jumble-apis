@@ -421,6 +421,78 @@ describe("should do service operations", function () {
         assert.equal(response.body.challengeable, false)
     })
 
+
+    it("/scoresandchallengestatus/:sourceUserId/:targetUserId - should identify friends as challengeable with score", async function () {
+        let serviceExpectation = userServiceMock.expects('getFriendshipDetailsForChallenge').once().resolves({
+            isFriend: true,
+            challengeable: true,
+            sourceUserScore: 1,
+            targetUserScore: 2
+        })
+        const response = await request("http://localhost:3000")
+            .get("/user/scoresandchallengestatus/someSourceUserId/someTargetUserId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation.getCall(0), sinon.match("someSourceUserId"), sinon.match("someTargetUserId"))
+        assert.equal(response.status, 200)
+        assert.exists(response.body)
+        assert.equal(response.body.challengeable, true)
+        assert.equal(response.body.sourceUserScore, 1)
+        assert.equal(response.body.targetUserScore, 2)
+        assert.notProperty(response.body, 'isFriend')
+    })
+
+    it("/scoresandchallengestatus/:sourceUserId/:targetUserId - should identify friends as not challengeable from service response, but produce score", async function () {
+        let serviceExpectation = userServiceMock.expects('getFriendshipDetailsForChallenge').once().resolves({
+            isFriend: true,
+            challengeable: false,
+            sourceUserScore: 1,
+            targetUserScore: 2
+        })
+        const response = await request("http://localhost:3000")
+            .get("/user/scoresandchallengestatus/someSourceUserId/someTargetUserId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation.getCall(0), sinon.match("someSourceUserId"), sinon.match("someTargetUserId"))
+        assert.equal(response.status, 200)
+        assert.exists(response.body)
+        assert.equal(response.body.challengeable, false)
+        assert.equal(response.body.sourceUserScore, 1)
+        assert.equal(response.body.targetUserScore, 2)
+        assert.notProperty(response.body, 'isFriend')
+    })
+
+    it("/scoresandchallengestatus/:sourceUserId/:targetUserId - should identify friends as not challengeable if friendship is not confirmed", async function () {
+        let serviceExpectation = userServiceMock.expects('getFriendshipDetailsForChallenge').once().resolves({
+            isFriend: false,
+            challengeable: false,
+            sourceUserScore: 1,
+            targetUserScore: 2
+        })
+        const response = await request("http://localhost:3000")
+            .get("/user/scoresandchallengestatus/someSourceUserId/someTargetUserId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation.getCall(0), sinon.match("someSourceUserId"), sinon.match("someTargetUserId"))
+        assert.equal(response.status, 400)
+        // assert.exists(response.body)
+        chai.expect(response.body).to.be.empty
+        assert.equal(response.text, "not a friend")
+    })
+
+    it("/scoresandchallengestatus/:sourceUserId/:targetUserId - should identify friends as not challengeable from service rejection", async function () {
+        let serviceExpectation = userServiceMock.expects('getFriendshipDetailsForChallenge').once().rejects({ error: 'mock error' })
+        const response = await request("http://localhost:3000")
+            .get("/user/scoresandchallengestatus/someSourceUserId/someTargetUserId")
+            .send()
+        serviceExpectation.verify()
+        sinon.assert.calledWith(serviceExpectation.getCall(0), sinon.match("someSourceUserId"), sinon.match("someTargetUserId"))
+        assert.equal(response.status, 400)
+        // assert.exists(response.body)
+        chai.expect(response.body).to.be.empty
+        assert.equal(response.text, "not a friend")
+    })
+
     it("/userIdAvailable/:appUserId - should return available false if result code is 0", async function () {
         let serviceExpectation = userServiceMock.expects('findUserByAppUserId').once().resolves({ result: 0 })
         const response = await request("http://localhost:3000")

@@ -11,6 +11,7 @@ loginRouter.get("/pendingfriends/:userId", userController.listPendingFriendReque
 loginRouter.get("/isChallengeable/:sourceUserId/:targetUserId", userController.isChallengeable)
 loginRouter.get("/userIdAvailable/:appUserId", userController.appUserIdAvailable)
 loginRouter.get("/emailIdForLogin/:appUserId", userController.getEmailIdFromAppUserId)
+loginRouter.get("/scoresandchallengestatus/:sourceUserId/:targetUserId", userController.friendshipScoreWithChallengeState)
 
 
 module.exports = loginRouter

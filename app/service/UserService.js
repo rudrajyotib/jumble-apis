@@ -115,6 +115,40 @@ module.exports = {
         return false
     },
 
+    getFriendshipDetailsForChallenge: async function (sourceUserId, targetUserId) {
+        const result = await userRepo.getFriendshipDetails(sourceUserId, targetUserId)
+            .then((result) => { return result })
+            .catch((err) => {
+                console.log('service error::' + JSON.stringify(err))
+                return { found: false }
+            })
+        if (!result.found || 'confirmed' != result.status || !result.duelId || '' === result.duelId) {
+            return {
+                isFriend: false
+            }
+        }
+        const duelData = await challengeRepository.getDuel(result.duelId).catch((err) => { return { found: false } })
+        if (!duelData.found) {
+            return {
+                isFriend: false
+            }
+        }
+        const duelDetails = duelData.data
+        const sourceUserScore = duelDetails.score[sourceUserId]
+        const targetUserScore = duelDetails.score[targetUserId]
+        const friendshipResult = {
+            isFriend: true,
+            challengeable: false,
+            sourceUserScore: sourceUserScore,
+            targetUserScore: targetUserScore
+        }
+        if ('open' === duelDetails.status || ('active' === duelDetails.status && sourceUserId === duelDetails.sourceUserId)) {
+            friendshipResult.challengeable = true
+        }
+        return friendshipResult
+    },
+
+
     findUserByAppUserId: async function (appUserId) {
         return await userRepo.findUserByAppUserId(appUserId).catch((err) => { return { result: -1 } })
     }
